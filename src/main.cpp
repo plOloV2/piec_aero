@@ -1,82 +1,69 @@
 #include "piec.h"
 
-etap *glowa = NULL;
-etap *teraz;
-dane *przy = new dane;
+stage *head = NULL;
+stage *now;
+data *przy = new data;
 
-void czy_wciskane(void *parametr){
-  if(digitalRead(10) == LOW)
-    przy->plus = true;
-  else 
-    przy->plus = false;
-  if(digitalRead(11) == LOW)
-    przy->minus = true;
-  else 
-    przy->minus = false;
-  if(digitalRead(12) == LOW)
-    przy->zatwierdz = true;
-  else 
-    przy->zatwierdz = false;
-  vTaskDelay(20 / portTICK_PERIOD_MS);
+void button_check(void *parametr){
+  buttons(przy);
+  vTaskDelay(50 / portTICK_PERIOD_MS);
 }
 
-void temperatura(void *parametr){
-  przy->temp_teraz = obecna_temp();
-  vTaskDelay(20 / portTICK_PERIOD_MS);
+void stage_change(void *parametr){
+  unsigned char stage_number = 0;
+  przy->cooling = false;
+  now = head;
+  while(now != NULL){
+    przy->to_end = now->stage_time;
+    stage_number++;
+    przy->stage_name = "E" + String(stage_number / 10) + String(stage_number % 10);
+    przy->temp_aim = owen_temp();
+    vTaskDelay(now->stage_time*60000 / portTICK_PERIOD_MS);
+    now = now->next;
+  }
+  przy->cooling = true;
+  przy->to_end = przy->cooling_time;
+  przy->cooling_temp_change = (30.0 - przy->temp_now) / przy->cooling_time;
+  przy->stage_name = "Chl";
 }
 
-void grzaly(void *parametr){
-  if(przy->zatwierdz && przy->plus){
-    digitalWrite(8, HIGH);
-    digitalWrite(9, HIGH);
-  }
-  if(przy->zatwierdz && przy->minus){
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
-  }
-  if(przy->temp_teraz < przy->temp_docelowa){
-    digitalWrite(8, HIGH);
-    digitalWrite(9, HIGH);
-  }
-  else{
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
-  }
-  vTaskDelay(20 / portTICK_PERIOD_MS);
+void temp(void *parametr){
+  przy->temp_now = owen_temp();
+  vTaskDelay(50 / portTICK_PERIOD_MS);
 }
 
-void zmiana_etapu(void *parametr){
-  teraz = glowa;
-  while(teraz != NULL){
-    przy->temp_docelowa = obecna_temp();
-    vTaskDelay(teraz->czas_wypalu*60000 / portTICK_PERIOD_MS);
-    teraz = teraz->kolejny;
-  }
+void owen_controll(void *parametr){
+  // if(przy->plus && przy->minus && przy->enter)
+  //   some piece of code to change current stage or quit baking
+  baking(przy);
+  vTaskDelay(50 / portTICK_PERIOD_MS);
 }
 
-void narost(void *parametr){
-  if(przy->temp_docelowa + teraz->narost/4.0 < teraz->temp_wypalu)
-    przy->temp_docelowa += teraz->narost/4.0;
-  else 
-    przy->temp_docelowa = teraz->temp_wypalu;
+void aim_temperature_change(void *parametr){
+  temp_change(przy, now);
   vTaskDelay(15000 / portTICK_PERIOD_MS);
 }
 
-// void ekran_wypal(void *parametr){
-  
-// }
+void lcd_update(void *parametr){
+  lcd_menager(przy, now);
+}
 
-// void ekran(void *parametr){
-  
-// }
+void time_keeper(void *parametr){
+  przy->to_end--;
+  vTaskDelay(60000 / portTICK_PERIOD_MS);
+}
 
-void setup() {
-  lcd.begin(16, 2); //16 znakow max w linijce, 2 linijki
-  pinMode(button_plus, INPUT_PULLUP); //przycisk "+"
-  pinMode(button_minus, INPUT_PULLUP); //przycisk "-"
-  pinMode(button_enter, INPUT_PULLUP); //przycisk "zatwierdź"
-  pinMode(8, OUTPUT); //grzały
-  pinMode(9, OUTPUT); //lampka
+void user_interface(void *parametr){
+  //not done yet
+}
+
+void setup() { //owen setup
+  lcd.begin(16, 2);
+  pinMode(button_plus, INPUT_PULLUP);
+  pinMode(button_minus, INPUT_PULLUP);
+  pinMode(button_enter, INPUT_PULLUP);
+  pinMode(owen, OUTPUT);
+  pinMode(led_indicator, OUTPUT);
 
 }
 
