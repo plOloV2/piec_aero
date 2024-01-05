@@ -14,6 +14,7 @@ TaskHandle_t lcd_updater;
 void button_check(void *parametr){
   while(1){
     buttons(przy);
+    wdt_reset();                        //watchdog timer reset
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
@@ -36,28 +37,29 @@ void main_task(void *parametr){
     }
       
     print_to_lcd(" Milego wypalu!", "" );       //greatings
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
     
 
 
     przy->data_ready = false;
     vTaskResume(data_enter);
-    //entering wypał data here
     while(!przy->data_ready)
       vTaskDelay(500 / portTICK_PERIOD_MS);
       
     vTaskSuspend(data_enter);
-    
 
 
     przy->stage_number = 0;     //initialization of nedded values, preparing to bake
     przy->cooling = false;
-    now = head;    
+    now = head;
 
     vTaskResume(temp_measurer);     //resuming tasks
-    vTaskResume(owen_controller);
-    vTaskResume(temp_changer);
+    //vTaskResume(owen_controller);
+    //vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
+
+    // print_to_lcd("tu dziala", "" );
+    // vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     while(now != NULL){                         //if now == NULL then we have reached the end of all stages -> while loop ends
       przy->to_end = now->stage_time;           //setting stage values, such as name, time and start temp
@@ -80,8 +82,8 @@ void main_task(void *parametr){
       przy->cooling_temp_change = (30.0 - przy->temp_now) / przy->cooling_time;
       przy->stage_name = "Chl";
       while(przy->to_end>0){
-        przy->to_end--;
         vTaskDelay(60000 / portTICK_PERIOD_MS);
+        przy->to_end--;
       }
 
     }
@@ -107,8 +109,9 @@ void temp_measure(void *parametr){
 
 void owen_controll(void *parametr){
   while(1){
-    // if(przy->plus && przy->minus && przy->enter)
-    //   some piece of code to change current stage or quit baking
+    if(przy->plus && przy->minus){
+      //   some piece of code to change current stage or quit baking
+    }
     baking(przy);
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
@@ -150,6 +153,8 @@ void data_input(void *parametr){
       vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
+
+    
     for(int i=0; i<przy->stage_number; i++){
       if(i==0){
         head = new stage;
@@ -159,31 +164,145 @@ void data_input(void *parametr){
         now->next = new stage;
         now = now->next;
       }
-      /*
-      maszyna stanow poczas wprowadzania
-      jeszcze jest watchdog i zmiana w tarkcie do zrobienia
-      */
+
+      przy->cooling_time = 1;
+      now->stage_temp = 30;
+      now->stage_time = 5;
+      now->temp_grow = 1;
+      now->next = NULL;
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+
+      unsigned char state = 0;
+      while(state < 3){
+
+        switch(state){
+          case(0):
+            print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
+
+            if(przy->plus){
+              if(now->stage_time == 9999)
+                now->stage_time = 0;
+              else 
+                now->stage_time++;
+            }
+
+            if(przy->minus){
+              if(now->stage_time == 0)
+                now->stage_time = 9999;
+              else 
+                now->stage_time--;
+            }
+            
+            if(przy->enter){
+              state = 1;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+              
+
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+
+            break;
+
+          case(1):
+            print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
+
+            if(przy->plus){
+              if(now->stage_temp == 255)
+                now->stage_temp = 30;
+              else 
+                now->stage_temp++;
+            }
+
+            if(przy->minus){
+              if(now->stage_temp == 30)
+                now->stage_temp = 255;
+              else 
+                now->stage_temp--;
+            }
+            
+            if(przy->enter){
+              state = 2;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+
+            break;
+
+            
+          case(2):
+            print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C");
+
+            if(przy->plus){
+              if(now->temp_grow == 255)
+                now->temp_grow = 1;
+              else 
+                now->temp_grow++;
+            }
+
+            if(przy->minus){
+              if(now->temp_grow == 1)
+                now->temp_grow = 255;
+              else 
+                now->temp_grow--;
+            }
+            
+            if(przy->enter){
+              state = 3;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+
+            break;
+        }
+      }
     }
 
+    przy->stage_number = 0;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    while(!przy->enter){
+      print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
+
+      if(przy->plus){
+        if(przy->cooling_time == 9999)
+          przy->cooling_time = 0;
+        else 
+          przy->cooling_time++;
+      }
+
+      if(przy->minus){
+        if(przy->cooling_time == 0)
+          przy->cooling_time = 9999;
+        else 
+          przy->cooling_time--;
+      }
+
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
 
     przy->data_ready = true;
   }
 }
 
 void setup() { //owen setup
-  lcd.begin(16, 2);
+
+  wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
+
+  lcd.begin(16, 2);                     //pins setup
   pinMode(button_plus, INPUT_PULLUP);
   pinMode(button_minus, INPUT_PULLUP);
   pinMode(button_enter, INPUT_PULLUP);
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
 
-  xTaskCreate(main_task, "Boss", 100, NULL, 10, &main_tasker);
+  xTaskCreate(main_task, "Boss", 100, NULL, 10, &main_tasker);                            //task creation
+  xTaskCreate(button_check, "Button checking", 100, NULL, 9, &button_checker);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 8, &data_enter);
   xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 7, &temp_measurer);
   xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 7, &temp_changer);
   xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 6, &owen_controller);
-  xTaskCreate(button_check, "Button checking", 100, NULL, 5, &button_checker);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
 
 }

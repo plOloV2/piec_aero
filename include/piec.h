@@ -2,6 +2,7 @@
 #include <LiquidCrystal.h>
 #include <Wire.h>
 #include <Arduino_FreeRTOS.h>
+#include <avr/wdt.h>
 
 #define owen 8                          //output to owen
 #define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
