@@ -25,29 +25,35 @@ struct data{
   bool minus;                      //minus button status
   bool enter;                      //enter button status
   bool cooling;                    //cooling switch
+  bool data_ready;                 //set to true if data input has been finishead
   float temp_now;                  //last measured temperature
   float temp_aim;                  //temperature wanted in owne
   float cooling_temp_change;       //temperature decreas during cooling
   unsigned int cooling_time;       //colling duration in minutes
   unsigned int to_end;             //time to end of stage in minutes
-  unsigned char stage_number;      //current stage number
+  unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
   String stage_name;               //name of current stage
 };
 
 
 void buttons(data *przy){               //updates buttons status at given data pointer, takes pointer to data struct as parameter
+
   if(digitalRead(button_plus) == LOW)
     przy->plus = true;
   else 
     przy->plus = false;
+    
   if(digitalRead(button_minus) == LOW)
     przy->minus = true;
   else 
     przy->minus = false;
+
   if(digitalRead(button_enter) == LOW)
     przy->enter = true;
   else 
     przy->enter = false;
+
+  //digitalWrite(owen, HIGH);
 }
 
 
