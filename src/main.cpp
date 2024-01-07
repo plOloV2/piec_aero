@@ -3,6 +3,11 @@
 stage *head = NULL, *now;
 data *przy = new data;
 
+
+double Kp = 1, Ki = 1, Kd = 1;
+PID owen_PID(&przy->temp_now, &przy->test, &przy->temp_aim, Kp, Ki, Kd, DIRECT);
+
+
 TaskHandle_t button_checker;
 TaskHandle_t main_tasker;
 TaskHandle_t temp_measurer;
@@ -58,8 +63,6 @@ void main_task(void *parametr){
     //vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
 
-    // print_to_lcd("tu dziala", "" );
-    // vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     while(now != NULL){                         //if now == NULL then we have reached the end of all stages -> while loop ends
       przy->to_end = now->stage_time;           //setting stage values, such as name, time and start temp
@@ -103,7 +106,7 @@ void main_task(void *parametr){
 void temp_measure(void *parametr){
   while(1){
     przy->temp_now = owen_temp();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
   }
 }
 
@@ -112,8 +115,11 @@ void owen_controll(void *parametr){
     if(przy->plus && przy->minus){
       //   some piece of code to change current stage or quit baking
     }
-    baking(przy);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    if(!baking_manual(przy)){
+      owen_PID.Compute();
+      
+    }
+    vTaskDelay(500 / portTICK_PERIOD_MS);
   }
 }
 
@@ -297,9 +303,9 @@ void setup() { //owen setup
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
 
-  PID owen_PID(&przy->temp_now, &przy->test, &przy->temp_aim, 1, 1, 1, DIRECT);
   owen_PID.SetOutputLimits(0, 1);
   owen_PID.SetMode(AUTOMATIC);
+
 
   xTaskCreate(main_task, "Boss", 100, NULL, 10, &main_tasker);                            //task creation
   xTaskCreate(button_check, "Button checking", 100, NULL, 9, &button_checker);

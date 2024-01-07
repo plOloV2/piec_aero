@@ -35,13 +35,13 @@ struct data{
   bool enter;                      //enter button status
   bool cooling;                    //cooling switch
   bool data_ready;                 //set to true if data input has been finishead
-  float temp_now;                  //last measured temperature
-  float temp_aim;                  //temperature wanted in owne
-  float cooling_temp_change;       //temperature decreas during cooling
+  double temp_now;                  //last measured temperature
+  double temp_aim;                  //temperature wanted in owne
+  double cooling_temp_change;       //temperature decreas during cooling
+  double test;
   unsigned int cooling_time;       //colling duration in minutes
   unsigned int to_end;             //time to end of stage in minutes
   unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
-  unsigned char test;
   String stage_name;               //name of current stage
 };
 
@@ -79,33 +79,25 @@ void temp_change(data *przy, stage *now){     //changes aimed temperature, calle
 }
 
 
-void baking(data *przy){              //determines actions in owen, takes pointer to data struct as parameter
+bool baking_manual(data *przy){              //manual controll over owen, return true if owen is manually controlled
 
   if(przy->enter && przy->plus){      //enter + plus -> owen heating ON
     digitalWrite(owen, HIGH);
     digitalWrite(led_indicator, HIGH);
-    return;
+    return true;
   }
 
   if(przy->enter && przy->minus){      //enter + minus -> owen heating OFF
     digitalWrite(owen, LOW);
     digitalWrite(led_indicator, LOW);
-    return;
+    return true;
   }
 
-  if(przy->temp_now < przy->temp_aim){  //if currnet temperature is lower than wanted temperature owen heating ON
-    digitalWrite(owen, HIGH);
-    digitalWrite(led_indicator, HIGH);
-  }
-
-  else{                                 //if else owen heating is OFF
-    digitalWrite(owen, LOW);
-    digitalWrite(led_indicator, LOW);
-  }
+  return false;
 }
 
 
-float owen_temp(){                      //measures temperature in owen
+double owen_temp(){                      //measures temperature in owen
   return thermocouple.readCelsius();
   //return (analogRead(LM35)*5.0)/10.24;
 }
