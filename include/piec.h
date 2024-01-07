@@ -3,14 +3,22 @@
 #include <Wire.h>
 #include <Arduino_FreeRTOS.h>
 #include <avr/wdt.h>
+#include <Adafruit_SPIDevice.h>
+#include <Adafruit_MAX31855.h>
+#include <PID_v1.h>
 
 #define owen 8                          //output to owen
 #define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
 #define button_plus 10                  //plus button
 #define button_minus 11                 //minus button
 #define button_enter 12                 //enter button
-#define LM35 A5                         //TO BE CHANGED to thermocouple, thermoresistor for now
+#define MAX_DO A0                       //thermocople pins
+#define MAX_CS A1                       //thermocople pins
+#define MAX_CLK A2                      //thermocople pins
+//#define LM35 A5                         //TO BE CHANGED to thermocouple, thermoresistor for now
+
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);    //LCD pinout initialization
+Adafruit_MAX31855 thermocouple (MAX_CLK, MAX_CS, MAX_DO);
 
 
 struct stage{ 
@@ -33,6 +41,7 @@ struct data{
   unsigned int cooling_time;       //colling duration in minutes
   unsigned int to_end;             //time to end of stage in minutes
   unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
+  unsigned char test;
   String stage_name;               //name of current stage
 };
 
@@ -54,7 +63,6 @@ void buttons(data *przy){               //updates buttons status at given data p
   else 
     przy->enter = false;
 
-  //digitalWrite(owen, HIGH);
 }
 
 
@@ -98,7 +106,8 @@ void baking(data *przy){              //determines actions in owen, takes pointe
 
 
 float owen_temp(){                      //measures temperature in owen
-  return (analogRead(LM35)*5.0)/10.24;
+  return thermocouple.readCelsius();
+  //return (analogRead(LM35)*5.0)/10.24;
 }
 
 

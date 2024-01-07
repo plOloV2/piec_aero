@@ -297,6 +297,10 @@ void setup() { //owen setup
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
 
+  PID owen_PID(&przy->temp_now, &przy->test, &przy->temp_aim, 1, 1, 1, DIRECT);
+  owen_PID.SetOutputLimits(0, 1);
+  owen_PID.SetMode(AUTOMATIC);
+
   xTaskCreate(main_task, "Boss", 100, NULL, 10, &main_tasker);                            //task creation
   xTaskCreate(button_check, "Button checking", 100, NULL, 9, &button_checker);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 8, &data_enter);
