@@ -94,13 +94,23 @@ bool baking_manual(data *przy){              //manual controll over owen, return
   return false;
 }
 
+void baking_auto(data *przy){
+  if(przy->temp_now < przy->temp_aim){
+    digitalWrite(owen, HIGH);
+    digitalWrite(led_indicator, HIGH);
+  }
+
+  else{
+    digitalWrite(owen, LOW);
+    digitalWrite(led_indicator, LOW);
+  }
+
+  return;
+}
+
 
 double owen_temp(){                      //measures temperature in owen
-  double x;
-  x = thermocouple.readCelsius();
-  if(isnan(x))
-    return 0;
-  return x;
+  return thermocouple.readCelsius();
 }
 
 

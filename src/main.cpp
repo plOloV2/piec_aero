@@ -53,7 +53,7 @@ void main_task(void *parametr){
     now = head;
 
     vTaskResume(temp_measurer);     //resuming tasks
-    // vTaskResume(owen_controller);
+    vTaskResume(owen_controller);
     vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
 
@@ -107,33 +107,23 @@ void main_task(void *parametr){
 void temp_measure(void *parametr){
   while(1){
     przy->temp_now = owen_temp();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 }
 
 void owen_controll(void *parametr){
   while(1){
-    // if(przy->plus && przy->minus){
-    //   //   some piece of code to change current stage or quit baking
-    // }
-    if(przy->enter && przy->plus){      //enter + plus -> owen heating ON
-      digitalWrite(owen, HIGH);
-      digitalWrite(led_indicator, HIGH);
-    }
 
-    if(przy->enter && przy->minus){      //enter + minus -> owen heating OFF
-      digitalWrite(owen, LOW);
-      digitalWrite(led_indicator, LOW);
-    }
+    if(!baking_manual(przy))
+      baking_auto(przy);
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 }
 
 void aim_temperature_change(void *parametr){
   while(1){
     temp_change(przy, now);
-    //Serial.println(przy->temp_aim);
     vTaskDelay(14000 / portTICK_PERIOD_MS);
   }
 }
@@ -303,7 +293,6 @@ void data_input(void *parametr){
 }
 
 void setup() { //owen setup
-  //Serial.begin(9600);
   wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
 
   lcd.begin(16, 2);                     //pins setup
