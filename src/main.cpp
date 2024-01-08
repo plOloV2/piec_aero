@@ -4,10 +4,6 @@ stage *head = NULL, *now;
 data *przy = new data;
 
 
-double Kp = 1, Ki = 1, Kd = 1;
-PID owen_PID(&przy->temp_now, &przy->test, &przy->temp_aim, Kp, Ki, Kd, DIRECT);
-
-
 TaskHandle_t button_checker;
 TaskHandle_t main_tasker;
 TaskHandle_t temp_measurer;
@@ -50,8 +46,6 @@ void main_task(void *parametr){
     vTaskResume(data_enter);
     while(!przy->data_ready)
       vTaskDelay(500 / portTICK_PERIOD_MS);
-      
-    vTaskSuspend(data_enter);
 
 
     przy->stage_number = 0;     //initialization of nedded values, preparing to bake
@@ -59,20 +53,27 @@ void main_task(void *parametr){
     now = head;
 
     vTaskResume(temp_measurer);     //resuming tasks
-    //vTaskResume(owen_controller);
-    //vTaskResume(temp_changer);
+    // vTaskResume(owen_controller);
+    vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
 
 
     while(now != NULL){                         //if now == NULL then we have reached the end of all stages -> while loop ends
+      unsigned long time;
       przy->to_end = now->stage_time;           //setting stage values, such as name, time and start temp
       przy->stage_number++;
       przy->stage_name = "E" + String(przy->stage_number / 10) + String(przy->stage_number % 10);
       przy->temp_aim = owen_temp();
 
+
+      time = millis();
       while(przy->to_end>0){                    //keeping track on time
-        przy->to_end--;
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        if((millis()-time)>60000){
+          przy->to_end--;
+          time = millis();
+        }
+          
+        vTaskDelay(100 / portTICK_PERIOD_MS);
       }
       
       now = now->next; 
@@ -106,27 +107,34 @@ void main_task(void *parametr){
 void temp_measure(void *parametr){
   while(1){
     przy->temp_now = owen_temp();
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
 void owen_controll(void *parametr){
   while(1){
-    if(przy->plus && przy->minus){
-      //   some piece of code to change current stage or quit baking
+    // if(przy->plus && przy->minus){
+    //   //   some piece of code to change current stage or quit baking
+    // }
+    if(przy->enter && przy->plus){      //enter + plus -> owen heating ON
+      digitalWrite(owen, HIGH);
+      digitalWrite(led_indicator, HIGH);
     }
-    if(!baking_manual(przy)){
-      owen_PID.Compute();
-      
+
+    if(przy->enter && przy->minus){      //enter + minus -> owen heating OFF
+      digitalWrite(owen, LOW);
+      digitalWrite(led_indicator, LOW);
     }
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
 void aim_temperature_change(void *parametr){
   while(1){
     temp_change(przy, now);
-    vTaskDelay(15000 / portTICK_PERIOD_MS);
+    //Serial.println(przy->temp_aim);
+    vTaskDelay(14000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -159,7 +167,6 @@ void data_input(void *parametr){
       vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
-
     
     for(int i=0; i<przy->stage_number; i++){
       if(i==0){
@@ -171,7 +178,7 @@ void data_input(void *parametr){
         now = now->next;
       }
 
-      przy->cooling_time = 1;
+
       now->stage_temp = 30;
       now->stage_time = 5;
       now->temp_grow = 1;
@@ -264,6 +271,8 @@ void data_input(void *parametr){
         }
       }
     }
+    
+    przy->cooling_time = 1;
 
     przy->stage_number = 0;
     vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -289,11 +298,12 @@ void data_input(void *parametr){
     }
 
     przy->data_ready = true;
+    vTaskSuspend(data_enter);
   }
 }
 
 void setup() { //owen setup
-
+  //Serial.begin(9600);
   wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
 
   lcd.begin(16, 2);                     //pins setup
@@ -303,16 +313,13 @@ void setup() { //owen setup
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
 
-  owen_PID.SetOutputLimits(0, 1);
-  owen_PID.SetMode(AUTOMATIC);
 
-
-  xTaskCreate(main_task, "Boss", 100, NULL, 10, &main_tasker);                            //task creation
-  xTaskCreate(button_check, "Button checking", 100, NULL, 9, &button_checker);
-  xTaskCreate(data_input, "Stage info input", 100, NULL, 8, &data_enter);
-  xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 7, &temp_measurer);
-  xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 7, &temp_changer);
-  xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 6, &owen_controller);
+  xTaskCreate(main_task, "Boss", 128, NULL, 10, &main_tasker);                            //task creation
+  xTaskCreate(button_check, "Button checking", 100, NULL, 4, &button_checker);
+  xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 3, &temp_measurer);
+  xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 2, &temp_changer);
+  xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
+  xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
 
 }

@@ -5,20 +5,18 @@
 #include <avr/wdt.h>
 #include <Adafruit_SPIDevice.h>
 #include <Adafruit_MAX31855.h>
-#include <PID_v1.h>
 
 #define owen 8                          //output to owen
 #define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
-#define button_plus 10                  //plus button
-#define button_minus 11                 //minus button
-#define button_enter 12                 //enter button
-#define MAX_DO A0                       //thermocople pins
-#define MAX_CS A1                       //thermocople pins
-#define MAX_CLK A2                      //thermocople pins
-//#define LM35 A5                         //TO BE CHANGED to thermocouple, thermoresistor for now
+#define button_plus A4                  //plus button
+#define button_minus A3                 //minus button
+#define button_enter A2                 //enter button
+#define MAX_DO 13                       //thermocople pins
+#define MAX_CS 12                       //thermocople pins
+#define MAX_CLK 11                      //thermocople pins
 
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);    //LCD pinout initialization
-Adafruit_MAX31855 thermocouple (MAX_CLK, MAX_CS, MAX_DO);
+Adafruit_MAX31855 thermocouple (MAX_CLK, MAX_CS, MAX_DO); //thermocouple initialization
 
 
 struct stage{ 
@@ -98,8 +96,11 @@ bool baking_manual(data *przy){              //manual controll over owen, return
 
 
 double owen_temp(){                      //measures temperature in owen
-  return thermocouple.readCelsius();
-  //return (analogRead(LM35)*5.0)/10.24;
+  double x;
+  x = thermocouple.readCelsius();
+  if(isnan(x))
+    return 0;
+  return x;
 }
 
 
