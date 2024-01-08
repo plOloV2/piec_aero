@@ -1,5 +1,6 @@
 #include "piec.h"
 
+
 stage *head = NULL, *now;
 data *przy = new data;
 
@@ -11,6 +12,8 @@ TaskHandle_t owen_controller;
 TaskHandle_t temp_changer;
 TaskHandle_t data_enter;
 TaskHandle_t lcd_updater;
+
+
 
 void button_check(void *parametr){
   while(1){
@@ -92,6 +95,9 @@ void main_task(void *parametr){
 
     }
 
+    digitalWrite(owen, LOW);
+    digitalWrite(led_indicator, LOW);
+
     vTaskSuspend(temp_measurer);          //after all baking and cooling suspends all not needed tasks
     vTaskSuspend(owen_controller);
     vTaskSuspend(temp_changer);
@@ -107,17 +113,33 @@ void main_task(void *parametr){
 void temp_measure(void *parametr){
   while(1){
     przy->temp_now = owen_temp();
-    vTaskDelay(200 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
 void owen_controll(void *parametr){
   while(1){
+    if(przy->plus && przy->minus){
+      vTaskSuspend(lcd_updater);
+      print_to_lcd("Restart?", "+ ->TAK  - ->NIE");
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+      while(1){
+        if(przy->plus)
+          resetFunc();
+
+        if(przy->minus)
+          break;
+
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+      }
+      vTaskResume(lcd_updater);
+    }
 
     if(!baking_manual(przy))
       baking_auto(przy);
 
-    vTaskDelay(200 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -234,7 +256,7 @@ void data_input(void *parametr){
 
             
           case(2):
-            print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C");
+            print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
 
             if(przy->plus){
               if(now->temp_grow == 255)
@@ -313,5 +335,4 @@ void setup() { //owen setup
 
 }
 
-void loop() {
-}
+void loop() {}

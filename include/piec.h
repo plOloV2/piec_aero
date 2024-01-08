@@ -17,6 +17,7 @@
 
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);    //LCD pinout initialization
 Adafruit_MAX31855 thermocouple (MAX_CLK, MAX_CS, MAX_DO); //thermocouple initialization
+void(* resetFunc) (void) = 0;
 
 
 struct stage{ 
@@ -93,6 +94,7 @@ bool baking_manual(data *przy){              //manual controll over owen, return
 
   return false;
 }
+
 
 void baking_auto(data *przy){
   if(przy->temp_now < przy->temp_aim){
