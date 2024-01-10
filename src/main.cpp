@@ -26,6 +26,9 @@ void button_check(void *parametr){
 void main_task(void *parametr){
   while(1){
 
+    digitalWrite(owen, LOW);
+    digitalWrite(led_indicator, LOW);
+
     vTaskSuspend(temp_measurer);        //sttoping all not needed now tasks
     vTaskSuspend(owen_controller);
     vTaskSuspend(temp_changer);
@@ -42,7 +45,6 @@ void main_task(void *parametr){
       
     print_to_lcd(" Milego wypalu!", "" );       //greatings
     vTaskDelay(3000 / portTICK_PERIOD_MS);
-    
 
 
     przy->data_ready = false;
@@ -60,9 +62,10 @@ void main_task(void *parametr){
     vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
 
+    unsigned long time;
+
 
     while(now != NULL){                         //if now == NULL then we have reached the end of all stages -> while loop ends
-      unsigned long time;
       przy->to_end = now->stage_time;           //setting stage values, such as name, time and start temp
       przy->stage_number++;
       przy->stage_name = "E" + String(przy->stage_number / 10) + String(przy->stage_number % 10);
@@ -74,6 +77,7 @@ void main_task(void *parametr){
         if((millis()-time)>60000){
           przy->to_end--;
           time = millis();
+          vTaskDelay(50000 / portTICK_PERIOD_MS);
         }
           
         vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -88,9 +92,16 @@ void main_task(void *parametr){
       przy->to_end = przy->cooling_time;
       przy->cooling_temp_change = (30.0 - przy->temp_now) / przy->cooling_time;
       przy->stage_name = "Chl";
+
+      time = millis();
       while(przy->to_end>0){
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
-        przy->to_end--;
+        if((millis()-time)>60000){
+          przy->to_end--;
+          time = millis();
+          vTaskDelay(50000 / portTICK_PERIOD_MS);
+        }
+          
+        vTaskDelay(100 / portTICK_PERIOD_MS);
       }
 
     }
@@ -121,7 +132,7 @@ void owen_controll(void *parametr){
   while(1){
     if(przy->plus && przy->minus){
       vTaskSuspend(lcd_updater);
-      print_to_lcd("Restart?", "+ ->TAK  - ->NIE");
+      print_to_lcd("Restart?", "- ->NIE  + ->TAK");
       vTaskDelay(1000 / portTICK_PERIOD_MS);
 
       while(1){
