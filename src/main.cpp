@@ -35,6 +35,7 @@ void main_task(void *parametr){
     vTaskSuspend(temp_changer);
     vTaskSuspend(lcd_updater);
     vTaskSuspend(data_enter);
+    vTaskSuspend(joker);
 
 
     print_to_lcd("Piec zablokowany", "Odb:ENTER + PLUS" ); //owen blokade, enter + plus -> owen unblock
@@ -62,6 +63,7 @@ void main_task(void *parametr){
     vTaskResume(owen_controller);
     vTaskResume(temp_changer);
     vTaskResume(lcd_updater);
+    vTaskResume(joker);
 
     unsigned long time;
 
@@ -114,6 +116,7 @@ void main_task(void *parametr){
     vTaskSuspend(owen_controller);
     vTaskSuspend(temp_changer);
     vTaskSuspend(lcd_updater);
+    vTaskSuspend(joker);
     
 
     print_to_lcd("Koniec pieczenia", "Smacznego ciacha");   //prints end text and waits to press enter
@@ -136,6 +139,7 @@ void owen_controll(void *parametr){
 
     if(przy->plus && przy->minus && !przy->enter){                      //PLUS + MINUS -> option to reset owen in midle of baking
       vTaskSuspend(lcd_updater);
+      vTaskSuspend(joker);
       print_to_lcd("Restart?", "- ->NIE  + ->TAK");
       vTaskDelay(1000 / portTICK_PERIOD_MS);
 
@@ -149,6 +153,7 @@ void owen_controll(void *parametr){
         vTaskDelay(500 / portTICK_PERIOD_MS);
       }
       vTaskResume(lcd_updater);
+      vTaskResume(joker);
     }
 
     if(!baking_manual(przy))
@@ -365,7 +370,7 @@ void setup() { //owen setup
   xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 2, &temp_changer);
   xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
-  ///xTaskCreate(joke, "Joke in owen", 128, NULL, 1, &joker);
+  xTaskCreate(joke, "Joke in owen", 128, NULL, 1, &joker);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
 
 }
