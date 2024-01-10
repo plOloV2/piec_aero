@@ -12,6 +12,7 @@ TaskHandle_t owen_controller;
 TaskHandle_t temp_changer;
 TaskHandle_t data_enter;
 TaskHandle_t lcd_updater;
+TaskHandle_t joker;
 
 
 
@@ -129,8 +130,11 @@ void temp_measure(void *parametr){
 }
 
 void owen_controll(void *parametr){
+  unsigned long time = millis();
+
   while(1){
-    if(przy->plus && przy->minus){
+
+    if(przy->plus && przy->minus && !przy->enter){                      //PLUS + MINUS -> option to reset owen in midle of baking
       vTaskSuspend(lcd_updater);
       print_to_lcd("Restart?", "- ->NIE  + ->TAK");
       vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -148,9 +152,13 @@ void owen_controll(void *parametr){
     }
 
     if(!baking_manual(przy))
-      baking_auto(przy);
+      if(millis()-time > 5000){                     //every 5s updates oven state
+        baking_auto(przy);
+        time = millis();
+      }
+      
 
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -164,6 +172,21 @@ void aim_temperature_change(void *parametr){
 void lcd_update(void *parametr){
   while(1)
     lcd_menager(przy, now);
+}
+
+void joke(void *parametr){
+  while(1){
+    if(przy->enter && przy->minus && przy->plus){
+
+      vTaskSuspend(lcd_updater);
+      let_the_fun_begin();
+      vTaskResume(lcd_updater);
+
+    }
+    else
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      
+  }
 }
 
 void data_input(void *parametr){
@@ -342,6 +365,7 @@ void setup() { //owen setup
   xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 2, &temp_changer);
   xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
+  ///xTaskCreate(joke, "Joke in owen", 128, NULL, 1, &joker);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
 
 }

@@ -5,6 +5,7 @@
 #include <avr/wdt.h>
 #include <Adafruit_SPIDevice.h>
 #include <Adafruit_MAX31855.h>
+#include "jokes.h"
 
 #define owen 8                          //output to owen
 #define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
@@ -80,13 +81,13 @@ void temp_change(data *przy, stage *now){     //changes aimed temperature, calle
 
 bool baking_manual(data *przy){              //manual controll over owen, return true if owen is manually controlled
 
-  if(przy->enter && przy->plus){      //enter + plus -> owen heating ON
+  if(przy->enter && przy->plus && !przy->minus){      //enter + plus -> owen heating ON
     digitalWrite(owen, HIGH);
     digitalWrite(led_indicator, HIGH);
     return true;
   }
 
-  if(przy->enter && przy->minus){      //enter + minus -> owen heating OFF
+  if(przy->enter && przy->minus && !przy->plus){      //enter + minus -> owen heating OFF
     digitalWrite(owen, LOW);
     digitalWrite(led_indicator, LOW);
     return true;
@@ -155,4 +156,45 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
   
+}
+
+
+void let_the_fun_begin(){
+
+  randomSeed(analogRead(A5));
+
+  unsigned char los = random(2);
+
+  String joke;
+
+  if(los==0)
+    joke = fun1();
+  else
+    joke = fun2();
+
+  if(joke.length() % 32 != 0){
+    print_to_lcd("Blad zartu", "Tepe chuje");
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    return;
+  }
+
+  los = joke.length()/32 + 1;
+
+
+  for(int i=0; i<los; i++){
+
+    String txt1 = "", txt2 = "";
+
+    for(int j=i*32; j<i*32+16; j++){
+      txt1 += joke[j];
+    }
+
+    for(int j=i*32+16; j<(i+1)*32; j++){
+      txt2 += joke[j];
+    }
+    
+    print_to_lcd(txt1, txt2);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+  }
+
 }
