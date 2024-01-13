@@ -1,281 +1,190 @@
 #include <Arduino.h>
 
-String fun1(){
+struct jokes_on_you{
+    String joke1;
+    String joke2;
+};
+
+
+void funny(jokes_on_you *joke){
 
     randomSeed(analogRead(A5));
 
-    String joke = "";
-    
     unsigned char los = random(16);
 
     switch(los){
         case(0):
-        joke = "Robert Rauch";
+        joke->joke1 = "Robert Rauch";
         break;
 
         case(1):
-        joke = "Gizmo";
+        joke->joke1 = "Gizmo";
         break;
 
         case(2):
-        joke = "Kuba Mirosławski";
+        joke->joke1 = "Kuba Mirosławski";
         break;
         
         case(3):
-        joke = "Macij Repelowski";
+        joke->joke1 = "Macij Repelowski";
         break;
 
         case(4):
-        joke = "Przemo Kałuza";
+        joke->joke1 = "Przemo Kałuza";
         break;
 
         case(5):
-        joke = "Adam Małysz";
+        joke->joke1 = "Adam Małysz";
         break;
 
         case(6):
-        joke = "Filip Szwedo";
+        joke->joke1 = "Filip Szwedo";
         break;
 
         case(7):
-        joke = "Łukasz Spyt";
+        joke->joke1 = "Łukasz Spyt";
         break;
 
         case(8):
-        joke = "Marcin Tkaczyk";
+        joke->joke1 = "Marcin Tkaczyk";
         break;
 
         case(9):
-        joke = "Oskar Wegrzyn";
+        joke->joke1 = "Oskar Wegrzyn";
         break;
 
         case(10):
-        joke = "Daniel Ceron";
+        joke->joke1 = "Daniel Ceron";
         break;
 
         case(11):
-        joke = "Twoja babka";
+        joke->joke1 = "Twoja babka";
         break;
 
         case(12):
-        joke = "Dział Chassis";
+        joke->joke1 = "Dział Chassis";
         break;
 
         case(13):
-        joke = "Baba z portierni";
+        joke->joke1 = "Baba z portierni";
         break;
 
         case(14):
-        joke = "Marketing";
+        joke->joke1 = "Marketing";
         break;
 
         case(15):
-        joke = "Suspension";
+        joke->joke1 = "Suspension";
         break;
     }
 
-    while(joke.length()<16)  
-        joke += " ";
-
+    
     los = random(26);
     
     switch(los){
         case(0):
-        joke += "laminuje";
+        joke->joke2 += "laminuje";
         break;
 
         case(1):
-        joke = "zamyka worek";
+        joke->joke2 = "zamyka worek";
         break;
 
         case(2):
-        joke = "zamyka morde";
+        joke->joke2 = "zamyka morde";
         break;
         
         case(3):
-        joke = "klei takitejpa";
+        joke->joke2 = "klei takitejpa";
         break;
 
         case(4):
-        joke = "udaje że pracuje";
+        joke->joke2 = "udaje że pracuje";
         break;
 
         case(5):
-        joke = "odsysa worek";
+        joke->joke2 = "odsysa worek";
         break;
 
         case(6):
-        joke = "szlifuje rdzen";
+        joke->joke2 = "szlifuje rdzen";
         break;
 
         case(7):
-        joke = "stawia browary";
+        joke->joke2 = "stawia browary";
         break;
 
         case(8):
-        joke = "tnie worek";
+        joke->joke2 = "tnie worek";
         break;
 
         case(9):
-        joke = "daje fula";
+        joke->joke2 = "daje fula";
         break;
 
         case(10):
-        joke = "jest głodny/a";
+        joke->joke2 = "jest głodny/a";
         break;
 
         case(11):
-        joke = "jest zly/a";
+        joke->joke2 = "jest zly/a";
         break;
 
         case(12):
-        joke = "chce do domu";
+        joke->joke2 = "chce do domu";
         break;
 
         case(13):
-        joke = "tnie wykroje";
+        joke->joke2 = "tnie wykroje";
         break;
 
         case(14):
-        joke = "masuje uszczelke";
+        joke->joke2 = "masuje uszczelke";
         break;
 
         case(15):
-        joke = "szlifuje formy";
+        joke->joke2 = "szlifuje formy";
         break;
 
         case(16):
-        joke = "wchodzi do pieca";
+        joke->joke2 = "wchodzi do pieca";
         break;
 
         case(17):
-        joke = "idzie do pirmu";
+        joke->joke2 = "idzie do pirmu";
         break;
 
         case(18):
-        joke = "gwintuje inserty";
+        joke->joke2 = "gwintuje inserty";
         break;
 
         case(19):
-        joke = "zlamal endplate";
+        joke->joke2 = "zlamal endplate";
         break;
 
         case(20):
-        joke = "wyrwal wklejke";
+        joke->joke2 = "wyrwal wklejke";
         break;
 
         case(21):
-        joke = "depnal na ub";
+        joke->joke2 = "depnal na ub";
         break;
 
         case(22):
-        joke = "udaje greka";
+        joke->joke2 = "udaje greka";
         break;
 
         case(23):
-        joke = "ma wszy";
+        joke->joke2 = "ma wszy";
         break;
 
         case(24):
-        joke = "nic nie rozumie";
+        joke->joke2 = "nic nie rozumie";
         break;
 
         case(25):
-        joke = "jest szalony";
+        joke->joke2 = "jest szalony";
         break;
     }
 
-    while(joke.length()<32)  
-        joke += " ";
-
-  return joke;
-}
-
-
-String fun2(){
-
-    randomSeed(analogRead(A5));
-
-    String joke = "";
-    
-    unsigned char los = random(10);
-
-    switch(los){
-        case(0):
-        joke += "Jak nazywa sie  ";
-        joke += "najwiekszy diler";
-        joke += "dragow w Polsce?";
-        joke += "                ";
-        joke += "KROL KRAK       ";
-        joke += "                ";
-        break;
-
-        case(1):
-        joke += "Dlaczego lod    ";
-        joke += "sie topi?       ";
-        joke += "Bo nie          ";
-        joke += "umie plywac     ";
-        break;
-
-        case(2):
-        joke += "Czemu w Afryce  ";
-        joke += "nie ma tabletek?";
-        joke += "bo nie mozna    ";
-        joke += "ich brac na     ";
-        joke += "pusty zoladek   ";
-        joke += "                ";
-        break;
-
-        case(3):
-        joke += "Czemu w Afryce  ";
-        joke += "nie ma tabletek?";
-        joke += "bo trzeba je    ";
-        joke += "popic woda      ";
-        break;
-
-        case(4):
-        joke += "Co bialego      ";
-        joke += "ma murzyn?      ";
-        joke += "Sluchac         ";
-        joke += "                ";
-        break;
-
-        case(5):
-        joke += "Czym sie rozni  ";
-        joke += "serce od murzyna";
-        joke += "Serce nie sluga ";
-        joke += "                ";
-        break;
-
-        case(6):
-        joke += "Czego rudy nie  ";
-        joke += "ma w szkole?    ";
-        joke += "Zycia           ";
-        joke += "                ";
-        break;
-
-        case(7):
-        joke += "Czego nie ma na ";
-        joke += "dobrej imprezie?";
-        joke += "Rudego          ";
-        joke += "                ";
-        break;
-
-        case(8):
-        joke += "Kto jest        ";
-        joke += "patronem ELEC?  ";
-        joke += "Ewa, bo pierwsza";
-        joke += "ciagnela druta  ";
-        break;
-
-        case(9):
-        joke += "Nie do rymu     ";
-        joke += "nie do taktu    ";
-        joke += "wsadz se chuja  ";
-        joke += "do kontaktu     ";
-        break;
-
-    }
-
-    return joke;
 }

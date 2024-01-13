@@ -370,7 +370,7 @@ void setup() { //owen setup
   xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 2, &temp_changer);
   xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
-  xTaskCreate(joke, "Joke in owen", 128, NULL, 1, &joker);
+  xTaskCreate(joke, "Joke in owen", 100, NULL, 1, &joker);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
 
 }

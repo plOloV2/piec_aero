@@ -160,41 +160,11 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
 
 
 void let_the_fun_begin(){
+  
+  jokes_on_you *fun = new jokes_on_you;
 
-  randomSeed(analogRead(A5));
-
-  unsigned char los = random(2);
-
-  String joke;
-
-  if(los==0)
-    joke = fun1();
-  else
-    joke = fun2();
-
-  if(joke.length() % 32 != 0){
-    print_to_lcd("Blad zartu", "Tepe chuje");
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-    return;
-  }
-
-  los = joke.length()/32 + 1;
-
-
-  for(int i=0; i<los; i++){
-
-    String txt1 = "", txt2 = "";
-
-    for(int j=i*32; j<i*32+16; j++){
-      txt1 += joke[j];
-    }
-
-    for(int j=i*32+16; j<(i+1)*32; j++){
-      txt2 += joke[j];
-    }
-    
-    print_to_lcd(txt1, txt2);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-  }
-
+  funny(fun);
+  
+  print_to_lcd(fun->joke1, fun->joke2);
+  vTaskDelay(3000 / portTICK_PERIOD_MS);
 }
