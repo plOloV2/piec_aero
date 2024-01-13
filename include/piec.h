@@ -160,11 +160,14 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
 
 
 void let_the_fun_begin(){
-  
-  jokes_on_you *fun = new jokes_on_you;
+  jokes_on_you *joke = new jokes_on_you;
 
-  funny(fun);
+  funny(joke);
   
-  print_to_lcd(fun->joke1, fun->joke2);
+  print_to_lcd(joke->joke1, joke->joke2);
+
+  delete joke;
+
   vTaskDelay(3000 / portTICK_PERIOD_MS);
+  
 }
