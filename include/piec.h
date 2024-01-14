@@ -37,7 +37,6 @@ struct data{
   double temp_now;                  //last measured temperature
   double temp_aim;                  //temperature wanted in owne
   double cooling_temp_change;       //temperature decreas during cooling
-  double test;
   unsigned int cooling_time;       //colling duration in minutes
   unsigned int to_end;             //time to end of stage in minutes
   unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
