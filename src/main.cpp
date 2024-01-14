@@ -187,7 +187,7 @@ void data_input(void *parametr){
           przy->stage_number--;
       }
 
-      vTaskDelay(100 / portTICK_PERIOD_MS);
+      vTaskDelay(150 / portTICK_PERIOD_MS);
     }
 
     
@@ -261,7 +261,7 @@ void data_input(void *parametr){
               vTaskDelay(500 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(150 / portTICK_PERIOD_MS);
 
             break;
 
@@ -288,7 +288,7 @@ void data_input(void *parametr){
               vTaskDelay(500 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(150 / portTICK_PERIOD_MS);
 
             break;
         }
@@ -334,6 +334,10 @@ void setup() { //owen setup
   pinMode(button_enter, INPUT_PULLUP);
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
+
+  
+  digitalWrite(owen, LOW);
+  digitalWrite(led_indicator, LOW);
 
 
   xTaskCreate(main_task, "Boss", 128, NULL, 10, &main_tasker);                            //task creation
