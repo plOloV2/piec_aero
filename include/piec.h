@@ -3,20 +3,16 @@
 #include <Wire.h>
 #include <Arduino_FreeRTOS.h>
 #include <avr/wdt.h>
-#include <Adafruit_SPIDevice.h>
-#include <Adafruit_MAX31855.h>
+
 
 #define owen 8                          //output to owen
 #define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
 #define button_plus A4                  //plus button
 #define button_minus A3                 //minus button
 #define button_enter A2                 //enter button
-#define MAX_DO 13                       //thermocople pins
-#define MAX_CS 12                       //thermocople pins
-#define MAX_CLK 11                      //thermocople pins
+#define termistor A0                    //termistor pin
 
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);    //LCD pinout initialization
-Adafruit_MAX31855 thermocouple (MAX_CLK, MAX_CS, MAX_DO); //thermocouple initialization
 void(* resetFunc) (void) = 0;
 
 
@@ -110,11 +106,6 @@ void baking_auto(data *przy){
 }
 
 
-double owen_temp(){                      //measures temperature in owen
-  return thermocouple.readCelsius();
-}
-
-
 void mem_clean(stage *head){            //clears memory allocated to stage struct, takes pointer to first stage struct as parameter
   stage *now = head;
   while(now!=NULL){
@@ -154,4 +145,38 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
   
+}
+     
+
+double owen_temp(){
+
+  //double voltageDividerR1 = 4700;          // Resistor value in R1 for voltage devider method 
+  //double BValue = 3470;                    // The B Value of the thermistor for the temperature measuring range
+  //double R1 = 5000;                        // Thermistor resistor rating at based temperature (25 degree celcius)
+  //double T1 = 298.15;                      /* Base temperature T1 in Kelvin (default should be at 25 degree)*/                               /* Measurement temperature T2 in Kelvin */
+  //double e = 2.718281828;                  /* the value of e use for calculation in Temperature*/
+  double temp;                               /* to read the value 4 times*/
+
+  temp = analogRead(termistor);
+  vTaskDelay(250 / portTICK_PERIOD_MS);
+
+  temp += analogRead(termistor);
+  vTaskDelay(250 / portTICK_PERIOD_MS);
+
+  temp += analogRead(termistor);
+  vTaskDelay(250 / portTICK_PERIOD_MS);
+
+  temp += analogRead(termistor);                                                 
+      
+  temp /= 4.0;                                                 /* find the average analog value from those data*/
+  
+  temp = log((4700 / (1023 / temp - 1) ) / 10000);
+  temp /= 3470;
+  temp += 1.0 / 298.15;
+  temp = 1.0 / temp;
+  temp -= 273.15;
+
+  vTaskDelay(250 / portTICK_PERIOD_MS);
+
+  return temp;                  
 }

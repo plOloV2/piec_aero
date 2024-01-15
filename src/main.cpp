@@ -19,7 +19,7 @@ void button_check(void *parametr){
   while(1){
     buttons(przy);
     wdt_reset();                        //watchdog timer reset
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
@@ -122,26 +122,14 @@ void main_task(void *parametr){
   while(!przy->enter)
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
-  vTaskDelay(500);
+  vTaskDelay(200);
   resetFunc();
 
 }
 
 void temp_measure(void *parametr){
-  double Average_of_4;
   while(1){
-    Average_of_4 = owen_temp();
-    vTaskDelay(250 / portTICK_PERIOD_MS);
-
-    Average_of_4 += owen_temp();
-    vTaskDelay(250 / portTICK_PERIOD_MS);
-
-    Average_of_4 += owen_temp();
-    vTaskDelay(250 / portTICK_PERIOD_MS);
-
-    Average_of_4 += owen_temp();
-    przy->temp_now = Average_of_4/4.0;
-    vTaskDelay(250 / portTICK_PERIOD_MS);
+    przy->temp_now = owen_temp();
   }
 }
 
@@ -191,7 +179,7 @@ void data_input(void *parametr){
       print_to_lcd("Ile etapow?", String(przy->stage_number));
 
       if(przy->plus){
-        if(przy->stage_number == 25)
+        if(przy->stage_number == 10)
           przy->stage_number = 0;
         else 
           przy->stage_number++;
@@ -199,12 +187,12 @@ void data_input(void *parametr){
 
       if(przy->minus){
         if(przy->stage_number == 0)
-          przy->stage_number = 25;
+          przy->stage_number = 10;
         else 
           przy->stage_number--;
       }
 
-      vTaskDelay(150 / portTICK_PERIOD_MS);
+      vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 
     
@@ -252,7 +240,7 @@ void data_input(void *parametr){
             }
               
 
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(150 / portTICK_PERIOD_MS);
 
             break;
 
@@ -260,7 +248,7 @@ void data_input(void *parametr){
             print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
 
             if(przy->plus){
-              if(now->stage_temp == 255)
+              if(now->stage_temp == 125)
                 now->stage_temp = 30;
               else 
                 now->stage_temp++;
@@ -268,7 +256,7 @@ void data_input(void *parametr){
 
             if(przy->minus){
               if(now->stage_temp == 30)
-                now->stage_temp = 255;
+                now->stage_temp = 125;
               else 
                 now->stage_temp--;
             }
@@ -278,7 +266,7 @@ void data_input(void *parametr){
               vTaskDelay(500 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(150 / portTICK_PERIOD_MS);
+            vTaskDelay(250 / portTICK_PERIOD_MS);
 
             break;
 
@@ -287,7 +275,7 @@ void data_input(void *parametr){
             print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
 
             if(przy->plus){
-              if(now->temp_grow == 255)
+              if(now->temp_grow == 30)
                 now->temp_grow = 1;
               else 
                 now->temp_grow++;
@@ -295,7 +283,7 @@ void data_input(void *parametr){
 
             if(przy->minus){
               if(now->temp_grow == 1)
-                now->temp_grow = 255;
+                now->temp_grow = 30;
               else 
                 now->temp_grow--;
             }
@@ -305,7 +293,7 @@ void data_input(void *parametr){
               vTaskDelay(500 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(150 / portTICK_PERIOD_MS);
+            vTaskDelay(250 / portTICK_PERIOD_MS);
 
             break;
         }
