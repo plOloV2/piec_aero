@@ -5,14 +5,14 @@
 #include <avr/wdt.h>
 
 
-#define owen 8                          //output to owen
-#define led_indicator 9                 //output indicator, HIGH if owen is told to heat 
+#define owen 12                          //output to owen
+#define led_indicator 13                 //output indicator, HIGH if owen is told to heat 
 #define button_plus A4                  //plus button
 #define button_minus A3                 //minus button
 #define button_enter A2                 //enter button
 #define termistor A0                    //termistor pin
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);    //LCD pinout initialization
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7, 8, 9, 10, 11);    //LCD pinout initialization
 void(* resetFunc) (void) = 0;
 
 
