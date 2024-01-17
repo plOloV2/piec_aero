@@ -120,12 +120,12 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
 
 double owen_temp(){
 
-  //double voltageDividerR1 = 4700;          // Resistor value in R1 for voltage devider method 
-  //double BValue = 3470;                    // The B Value of the thermistor for the temperature measuring range
-  //double R1 = 5000;                        // Thermistor resistor rating at based temperature (25 degree celcius)
-  //double T1 = 298.15;                      /* Base temperature T1 in Kelvin (default should be at 25 degree)*/                               /* Measurement temperature T2 in Kelvin */
-  //double e = 2.718281828;                  /* the value of e use for calculation in Temperature*/
-  double temp;                               /* to read the value 4 times*/
+  //4700                         Resistor value in R1 for voltage devider method 
+  //3470                         The B Value of the thermistor for the temperature measuring range
+  //5000                         Thermistor resistor rating at based temperature (25 degree celcius)
+  //298.15                       Base temperature T1 in Kelvin (default should be at 25 degree)
+
+  double temp;                    /* to read the value 4 times*/
 
   temp = analogRead(termistor);
   wdt_reset(); 

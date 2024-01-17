@@ -10,11 +10,11 @@ void funny(jokes_on_you *joke){
 
     randomSeed(analogRead(A5));
 
-    unsigned char los = random(5);
+    unsigned char los = random(4);
 
     switch(los){
         case(0):
-        joke->joke1 = "Robert Rauch";
+        joke->joke1 = "Kuba Ruchala";
         break;
 
         case(1):
@@ -22,20 +22,16 @@ void funny(jokes_on_you *joke){
         break;
 
         case(2):
-        joke->joke1 = "Kuba Miroslawski";
+        joke->joke1 = "Zuber";
         break;
         
         case(3):
-        joke->joke1 = "Macij Repelowski";
-        break;
-
-        case(4):
-        joke->joke1 = "Przemo Kaluza";
+        joke->joke1 = "Michal Dowgiallo";
         break;
     }
 
     
-    los = random(10);
+    los = random(8);
     
     switch(los){
         case(0):
@@ -59,23 +55,15 @@ void funny(jokes_on_you *joke){
         break;
 
         case(5):
-        joke->joke2 = "odsysa worek";
+        joke->joke2 = "daje fula";
         break;
 
         case(6):
-        joke->joke2 = "szlifuje rdzen";
+        joke->joke2 = "leci w chuja";
         break;
 
         case(7):
         joke->joke2 = "stawia browary";
-        break;
-
-        case(8):
-        joke->joke2 = "jest zly";
-        break;
-
-        case(9):
-        joke->joke2 = "daje fula";
         break;
     }
 
