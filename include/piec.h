@@ -168,3 +168,21 @@ void let_the_fun_begin(){
   vTaskDelay(3000 / portTICK_PERIOD_MS);
   
 }
+
+unsigned char value_change(unsigned char value, unsigned char max, unsigned char min, data *przy){
+
+  if(przy->plus){
+    if(value == max)
+      value = min;
+    else 
+      value++;
+  }
+  else if(przy->minus){
+    if(value == min)
+      value = max;
+    else 
+      value--;
+  }
+  
+  return value;
+}

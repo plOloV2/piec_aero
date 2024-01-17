@@ -76,19 +76,7 @@ void data_input(void *parametr){
     while(!przy->enter){
       print_to_lcd("Ile etapow?", String(przy->stage_number));
 
-      if(przy->plus){
-        if(przy->stage_number == 10)
-          przy->stage_number = 0;
-        else 
-          przy->stage_number++;
-      }
-
-      if(przy->minus){
-        if(przy->stage_number == 0)
-          przy->stage_number = 10;
-        else 
-          przy->stage_number--;
-      }
+      przy->stage_number = value_change(przy->stage_number, 10, 0, przy);
 
       vTaskDelay(250 / portTICK_PERIOD_MS);
     }
@@ -145,19 +133,7 @@ void data_input(void *parametr){
           case(1):
             print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
 
-            if(przy->plus){
-              if(now->stage_temp == 125)
-                now->stage_temp = 30;
-              else 
-                now->stage_temp++;
-            }
-
-            if(przy->minus){
-              if(now->stage_temp == 30)
-                now->stage_temp = 125;
-              else 
-                now->stage_temp--;
-            }
+            now->stage_temp = value_change(now->stage_temp, 125, 30, przy);
             
             if(przy->enter){
               state = 2;
@@ -172,19 +148,7 @@ void data_input(void *parametr){
           case(2):
             print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
 
-            if(przy->plus){
-              if(now->temp_grow == 30)
-                now->temp_grow = 1;
-              else 
-                now->temp_grow++;
-            }
-
-            if(przy->minus){
-              if(now->temp_grow == 1)
-                now->temp_grow = 30;
-              else 
-                now->temp_grow--;
-            }
+            now->temp_grow = value_change(now->temp_grow, 30, 1, przy);
             
             if(przy->enter){
               state = 3;
@@ -365,7 +329,7 @@ void loop() {
 
 
 
-  print_to_lcd("Koniec pieczenia", "Smacznego T:");   //prints end text and waits to press enter
+  print_to_lcd("Koniec pieczenia", "T:");   //prints end text and waits to press enter
   while(!przy->enter){
     lcd.setCursor(12,0);
     lcd.print(przy->temp_now);
