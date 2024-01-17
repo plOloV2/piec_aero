@@ -18,7 +18,7 @@ void(* resetFunc) (void) = 0;
 
 
 struct stage{ 
-  unsigned int stage_time;        //stage time in minutes
+  unsigned char stage_time;        //stage time in minutes
   unsigned char stage_temp;       //stage temperature in °C
   unsigned char temp_grow;        //tempetature grow in 0.1°C
   stage *next;                    //pointer to next stage 
@@ -34,8 +34,8 @@ struct data{
   double temp_now;                  //last measured temperature
   double temp_aim;                  //temperature wanted in owne
   double cooling_temp_change;       //temperature decreas during cooling
-  unsigned int cooling_time;       //colling duration in minutes
-  unsigned int to_end;             //time to end of stage in minutes
+  unsigned char cooling_time;       //colling duration in minutes
+  unsigned char to_end;             //time to end of stage in minutes
   unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
   String stage_name;               //name of current stage
 };

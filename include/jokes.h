@@ -35,7 +35,7 @@ void funny(jokes_on_you *joke){
     
     switch(los){
         case(0):
-        joke->joke2 += "laminuje";
+        joke->joke2 = "laminuje";
         break;
 
         case(1):

@@ -100,32 +100,20 @@ void data_input(void *parametr){
       vTaskDelay(500 / portTICK_PERIOD_MS);
 
       unsigned char state = 0;
+      
       while(state < 3){
 
         switch(state){
           case(0):
             print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
 
-            if(przy->plus){
-              if(now->stage_time == 9999)
-                now->stage_time = 0;
-              else 
-                now->stage_time++;
-            }
-
-            if(przy->minus){
-              if(now->stage_time == 0)
-                now->stage_time = 9999;
-              else 
-                now->stage_time--;
-            }
+            now->stage_time = value_change(now->stage_time, 255, 1, przy);
             
             if(przy->enter){
               state = 1;
               vTaskDelay(500 / portTICK_PERIOD_MS);
             }
               
-
             vTaskDelay(150 / portTICK_PERIOD_MS);
 
             break;
@@ -170,19 +158,7 @@ void data_input(void *parametr){
     while(!przy->enter){
       print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
 
-      if(przy->plus){
-        if(przy->cooling_time == 9999)
-          przy->cooling_time = 0;
-        else 
-          przy->cooling_time++;
-      }
-
-      if(przy->minus){
-        if(przy->cooling_time == 0)
-          przy->cooling_time = 9999;
-        else 
-          przy->cooling_time--;
-      }
+      przy->cooling_time = value_change(przy->cooling, 255, 0, przy);
 
       vTaskDelay(100 / portTICK_PERIOD_MS);
     }
@@ -254,10 +230,12 @@ void loop() {
   print_to_lcd(" Milego wypalu!", "" );       //greatings
   delay(3000);
 
+
   przy->data_ready = false;
   xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
   while(!przy->data_ready)
     delay(500);
+
 
   vTaskDelete(data_enter);
   przy->stage_number = 0;     //initialization of nedded values, preparing to bake
@@ -298,10 +276,12 @@ void loop() {
 
   if(przy->cooling_time != 0){                //cooling time set to 0 -> no cooling
 
+
     przy->cooling = true;                 //seting up cooling values
     przy->to_end = przy->cooling_time;
     przy->cooling_temp_change = (30.0 - przy->temp_now) / (przy->cooling_time*4.0);
     przy->stage_name = "Chl";
+
 
     time = millis();
     while(przy->to_end>0){
