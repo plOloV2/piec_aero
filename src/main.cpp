@@ -5,39 +5,36 @@ stage *head = NULL, *now;
 data *przy = new data;
 
 
-TaskHandle_t button_checker;
 TaskHandle_t temp_measurer;
 TaskHandle_t owen_controller;
 TaskHandle_t temp_changer;
 TaskHandle_t data_enter;
 TaskHandle_t lcd_updater;
-TaskHandle_t joker;
+TaskHandle_t jokes;
 
-
-
-void button_check(void *parametr){      //always ON
-  while(1){
-    buttons(przy);
-    wdt_reset();                        //watchdog timer reset
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
+void button_change_enter(){
+  przy->enter = !przy->enter;
 }
+
+void button_change_plus(){
+  przy->plus = !przy->plus;
+}
+
+void button_change_minus(){
+  przy->minus = !przy->minus;
+}
+
 
 void temp_measure(void *parametr){
   while(1){
     przy->temp_now = owen_temp();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
 void owen_controll(void *parametr){
-  unsigned long time = millis();
-
   while(1){
-
-    if(przy->plus && przy->minus && !przy->enter){                      //PLUS + MINUS -> option to reset owen in midle of baking
+    if(przy->plus && przy->minus){
       vTaskSuspend(lcd_updater);
-      vTaskSuspend(joker);
       print_to_lcd("Restart?", "- ->NIE  + ->TAK");
       vTaskDelay(1000 / portTICK_PERIOD_MS);
 
@@ -51,214 +48,200 @@ void owen_controll(void *parametr){
         vTaskDelay(500 / portTICK_PERIOD_MS);
       }
       vTaskResume(lcd_updater);
-      vTaskResume(joker);
     }
 
     if(!baking_manual(przy))
-      if(millis()-time > 5000){                     //every 5s updates oven state
-        baking_auto(przy);
-        time = millis();
-      }
-      
+      baking_auto(przy);
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
   }
 }
 
-void aim_temperature_change(void *parametr){        //changes aimed temp in even every ~15s
+void aim_temperature_change(void *parametr){
   while(1){
     temp_change(przy, now);
     vTaskDelay(14000 / portTICK_PERIOD_MS);
   }
 }
 
-void lcd_update(void *parametr){                    //prints owen info on lcd
+void lcd_update(void *parametr){
   while(1)
     lcd_menager(przy, now);
 }
 
-void joke(void *parametr){                          //just prints jokes to lcd when all 3 buttons are pressed
+void data_input(void *parametr){
   while(1){
-    if(przy->enter && przy->minus && przy->plus){
+    przy->stage_number = 1;
 
-      vTaskSuspend(lcd_updater);                    //suspends printing owen info into lcd
+    while(!przy->enter){
+      print_to_lcd("Ile etapow?", String(przy->stage_number));
 
-      let_the_fun_begin();                          //prints joke
+      if(przy->plus){
+        if(przy->stage_number == 10)
+          przy->stage_number = 0;
+        else 
+          przy->stage_number++;
+      }
 
-      vTaskResume(lcd_updater);                     //resumes printing owen info into lcd
+      if(przy->minus){
+        if(przy->stage_number == 0)
+          przy->stage_number = 10;
+        else 
+          przy->stage_number--;
+      }
 
+      vTaskDelay(250 / portTICK_PERIOD_MS);
     }
-    else
-      vTaskDelay(1000 / portTICK_PERIOD_MS);
-      
+
+    
+    for(int i=0; i<przy->stage_number; i++){
+      if(i==0){
+        head = new stage;
+        now = head;
+      }
+      else{
+        now->next = new stage;
+        now = now->next;
+      }
+
+
+      now->stage_temp = 30;
+      now->stage_time = 5;
+      now->temp_grow = 1;
+      now->next = NULL;
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+
+      unsigned char state = 0;
+      while(state < 3){
+
+        switch(state){
+          case(0):
+            print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
+
+            if(przy->plus){
+              if(now->stage_time == 9999)
+                now->stage_time = 0;
+              else 
+                now->stage_time++;
+            }
+
+            if(przy->minus){
+              if(now->stage_time == 0)
+                now->stage_time = 9999;
+              else 
+                now->stage_time--;
+            }
+            
+            if(przy->enter){
+              state = 1;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+              
+
+            vTaskDelay(150 / portTICK_PERIOD_MS);
+
+            break;
+
+          case(1):
+            print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
+
+            if(przy->plus){
+              if(now->stage_temp == 125)
+                now->stage_temp = 30;
+              else 
+                now->stage_temp++;
+            }
+
+            if(przy->minus){
+              if(now->stage_temp == 30)
+                now->stage_temp = 125;
+              else 
+                now->stage_temp--;
+            }
+            
+            if(przy->enter){
+              state = 2;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(250 / portTICK_PERIOD_MS);
+
+            break;
+
+            
+          case(2):
+            print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
+
+            if(przy->plus){
+              if(now->temp_grow == 30)
+                now->temp_grow = 1;
+              else 
+                now->temp_grow++;
+            }
+
+            if(przy->minus){
+              if(now->temp_grow == 1)
+                now->temp_grow = 30;
+              else 
+                now->temp_grow--;
+            }
+            
+            if(przy->enter){
+              state = 3;
+              vTaskDelay(500 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(250 / portTICK_PERIOD_MS);
+
+            break;
+        }
+      }
+    }
+    
+    przy->cooling_time = 1;
+
+    przy->stage_number = 0;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    while(!przy->enter){
+      print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
+
+      if(przy->plus){
+        if(przy->cooling_time == 9999)
+          przy->cooling_time = 0;
+        else 
+          przy->cooling_time++;
+      }
+
+      if(przy->minus){
+        if(przy->cooling_time == 0)
+          przy->cooling_time = 9999;
+        else 
+          przy->cooling_time--;
+      }
+
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
+    przy->data_ready = true;
+    vTaskSuspend(data_enter);
   }
 }
 
-void data_input(void *parametr){
-  przy->stage_number = 1;                                       //number od stages, at start =1
-
-  while(!przy->enter){
-    print_to_lcd("Ile etapow?", String(przy->stage_number));
-
-    if(przy->plus){                                             //does not allow to go beyond usigned char type
-      if(przy->stage_number == 255)
-        przy->stage_number = 0;
-      else 
-        przy->stage_number++;                                   //if "PLUS" button is pressed adds 1 to number of stages
+void joker(void *parametr){
+  while(1){
+    if(przy->enter && przy->plus && przy->minus){
+      vTaskSuspend(lcd_updater);
+      let_the_fun_begin();
+      vTaskResume(lcd_updater);
     }
-
-    if(przy->minus){
-      if(przy->stage_number == 0)
-        przy->stage_number = 255;
-      else 
-        przy->stage_number--;                                   //if "MINUS" button is pressed subtracts 1 of number of stages
-    }
-
-    vTaskDelay(150 / portTICK_PERIOD_MS);
+    else
+      vTaskDelay(500 / portTICK_PERIOD_MS);
   }
-
-  
-  for(int i=0; i<przy->stage_number; i++){                     //repets as many times as number of stages
-    if(i==0){                                       //in first iteration creats new struct at head
-      head = new stage;
-      now = head;
-    }
-    else{                                           //in next iterations creats new struct at previous struct pointer to next struct
-      now->next = new stage;
-      now = now->next;
-    }
-
-
-    now->stage_temp = 30;                                      //sets start values inside new struct
-    now->stage_time = 5;
-    now->temp_grow = 1;
-    now->next = NULL;
-
-
-    vTaskDelay(500 / portTICK_PERIOD_MS);                      //waits 0.5s in case user presses "ENTER" button too long
-
-
-    unsigned char state = 0;                                    //state machine to enter data to struct
-
-
-    while(state < 3){                                           //case 3 ends loop
-
-      switch(state){
-
-        case(0):                                                //case 0 -> stage time
-          print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
-
-          if(przy->plus){
-            if(now->stage_time == 9999)
-              now->stage_time = 0;
-            else 
-              now->stage_time++;
-          }
-
-          if(przy->minus){
-            if(now->stage_time == 0)
-              now->stage_time = 9999;
-            else 
-              now->stage_time--;
-          }
-          
-          if(przy->enter){
-            state = 1;                                        //teleport to case 1 -> stage temp
-            vTaskDelay(500 / portTICK_PERIOD_MS);             //waits 0.5s in case user presses "ENTER" button too long
-          }
-            
-
-          vTaskDelay(100 / portTICK_PERIOD_MS);
-
-          break;
-
-        case(1):                                            //case 1 -> stage temp
-          print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
-
-          if(przy->plus){
-            if(now->stage_temp == 255)
-              now->stage_temp = 30;
-            else 
-              now->stage_temp++;
-          }
-
-          if(przy->minus){
-            if(now->stage_temp == 30)
-              now->stage_temp = 255;
-            else 
-              now->stage_temp--;
-          }
-          
-          if(przy->enter){
-            state = 2;                                     //telepoprt to stage 2 -> temp grow
-            vTaskDelay(500 / portTICK_PERIOD_MS);          //waits 0.5s in case user presses "ENTER" button too long
-          }
-
-          vTaskDelay(150 / portTICK_PERIOD_MS);
-
-          break;
-
-          
-        case(2):                                            //case 2 -> temp grow
-          print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
-
-          if(przy->plus){
-            if(now->temp_grow == 255)
-              now->temp_grow = 1;
-            else 
-              now->temp_grow++;
-          }
-
-          if(przy->minus){
-            if(now->temp_grow == 1)
-              now->temp_grow = 255;
-            else 
-              now->temp_grow--;
-          }
-          
-          if(przy->enter){
-            state = 3;                                   //teleport to end of loop
-            vTaskDelay(500 / portTICK_PERIOD_MS);        //waits 0.5s in case user presses "ENTER" button too long
-          }
-
-          vTaskDelay(150 / portTICK_PERIOD_MS);
-
-          break;
-      }
-    }
-  }
-  
-  przy->cooling_time = 1;                              //sets starting value for cooling time
-
-  przy->stage_number = 0;                              //returns stage_number to value expected in main loop
-
-  vTaskDelay(500 / portTICK_PERIOD_MS);               //waits 0.5s in case user presses "ENTER" button too long (don't exactly sure if needed here)
-
-
-  while(!przy->enter){
-    print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
-
-    if(przy->plus){
-      if(przy->cooling_time == 9999)
-        przy->cooling_time = 0;
-      else 
-        przy->cooling_time++;
-    }
-
-    if(przy->minus){
-      if(przy->cooling_time == 0)
-        przy->cooling_time = 9999;
-      else 
-        przy->cooling_time--;
-    }
-
-    vTaskDelay(150 / portTICK_PERIOD_MS);
-  }
-
-  przy->data_ready = true;                          //sends info that stage data is ready
 }
 
 void setup() { //owen setup
+
   wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
 
   lcd.begin(16, 2);                     //pins setup
@@ -269,55 +252,62 @@ void setup() { //owen setup
   pinMode(led_indicator, OUTPUT);
 
 
-  digitalWrite(owen, LOW);             //owen off
-  digitalWrite(led_indicator, LOW);
+  if(button_enter == LOW)
+    przy->enter = true;
+  else
+    przy->enter = false;
+  if(button_plus == LOW)
+    przy->plus = true;
+  else
+    przy->plus = false;
+  if(button_minus == LOW)
+    przy->minus = true;
+  else
+    przy->minus = false;
 
 
-  xTaskCreate(button_check, "Button checking", 100, NULL, 4, &button_checker);
+  attachInterrupt(digitalPinToInterrupt(button_enter), button_change_enter, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(button_plus), button_change_enter, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(button_minus), button_change_enter, CHANGE);
 
-}
-
-void loop() {
-
+  
   digitalWrite(owen, LOW);
   digitalWrite(led_indicator, LOW);
 
 
-  print_to_lcd("Piec zablokowany", "Odb:ENTER + PLUS"); //owen blokade, enter + plus -> owen unblock
+  xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 3, &temp_measurer);
+}
+
+void loop() {
+
+  print_to_lcd("Piec zablokowany", "Odb:ENTER + PLUS" );        //owen blokade, enter + plus -> owen unblock
   while(1){
     delay(100);
     if(przy->enter && przy->plus)
       break;
   }
-    
-  print_to_lcd(" Milego wypalu!", "");       //greatings
+
+  print_to_lcd(" Milego wypalu!", "" );       //greatings
   delay(3000);
 
-
-  przy->data_ready = false;                  //stage data not ready
-
-  xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);         //starts data entry task
-
-  while(!przy->data_ready)                   //waits for task to return true
+  przy->data_ready = false;
+  xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
+  while(!przy->data_ready)
     delay(500);
 
-  delay(25);                                 //waits a bit a then deletes task
-
   vTaskDelete(data_enter);
-
   przy->stage_number = 0;     //initialization of nedded values, preparing to bake
   przy->cooling = false;
   now = head;
 
 
-  xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 4, &temp_measurer);                  //creats task needed to operate owen
-  xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 3, &temp_changer);
-  xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 2, &owen_controller);
-  xTaskCreate(joke, "Joke in owen", 100, NULL, 1, &joker);
+  xTaskCreate(aim_temperature_change, "Temp changing", 100, NULL, 2, &temp_changer);
+  xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
+  xTaskCreate(joker, "jokes", 100, NULL, 0, &jokes);
 
 
-  unsigned long time;                         //holds time info to measure 1min more precisely 
+  unsigned long time;
 
 
   while(now != NULL){                         //if now == NULL then we have reached the end of all stages -> while loop ends
@@ -329,36 +319,33 @@ void loop() {
 
     time = millis();
     while(przy->to_end>0){                    //keeping track on time
-
-      if((millis()-time)>60000){              
-
-        przy->to_end--;                       //when 1min passes subtracts 1 of time to end
-        time = millis();                      //resets time value
-        delay(55000);                         //waits ~55sec until starts checking time again
+      if((millis()-time)>60000){
+        przy->to_end--;
+        time = millis();
+        if(przy->to_end > 0) 
+          delay(50000);
       }
         
       delay(100);
     }
     
-    now = now->next;                          //after stage time passes, changes pointer to current stage to next one
-
+    now = now->next; 
   }
 
   if(przy->cooling_time != 0){                //cooling time set to 0 -> no cooling
 
     przy->cooling = true;                 //seting up cooling values
     przy->to_end = przy->cooling_time;
-    przy->cooling_temp_change = (30.0 - przy->temp_now) / przy->cooling_time;
+    przy->cooling_temp_change = (30.0 - przy->temp_now) / (przy->cooling_time*4.0);
     przy->stage_name = "Chl";
 
     time = millis();
-    while(przy->to_end>0){                    //keeping track on time
-
+    while(przy->to_end>0){
       if((millis()-time)>60000){
-
-        przy->to_end--;                       //when 1min passes subtracts 1 of time to end
-        time = millis();                      //resets time value
-        delay(55000);                         //waits ~55sec until starts checking time again
+        przy->to_end--;
+        time = millis();
+        if(przy->to_end > 0) 
+          delay(50000);
       }
         
       delay(100);
@@ -366,20 +353,28 @@ void loop() {
 
   }
 
-  digitalWrite(owen, LOW);              //switches owen off
-  digitalWrite(led_indicator, LOW);
 
-  mem_clean(head);                     //cleans alocated memory
-
-  vTaskDelete(temp_measurer);          //after all baking and cooling kills all tasks except buttons task
-  vTaskDelete(owen_controller);
+  vTaskDelete(owen_controller);          //after all baking and cooling Deletes all not needed tasks
   vTaskDelete(temp_changer);
   vTaskDelete(lcd_updater);
-  vTaskDelete(joker);
+  vTaskDelete(jokes);
 
 
-  print_to_lcd("Koniec pieczenia", "Smacznego ciacha");   //prints end text and waits to press enter
-  while(!przy->enter)
-    delay(100);
+  digitalWrite(owen, LOW);
+  digitalWrite(led_indicator, LOW);
+
+
+
+  print_to_lcd("Koniec pieczenia", "Smacznego T:");   //prints end text and waits to press enter
+  while(!przy->enter){
+    lcd.setCursor(12,0);
+    lcd.print(przy->temp_now);
+    delay(500);
+  }
+    
+
+  delay(200);
+
+  resetFunc();
 
 }
