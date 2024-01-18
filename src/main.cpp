@@ -33,7 +33,7 @@ void temp_measure(void *parametr){
 
 void owen_controll(void *parametr){
   while(1){
-    if(przy->plus && przy->minus){
+    if(przy->plus && przy->minus && !przy->enter){
       vTaskSuspend(lcd_updater);
       print_to_lcd("Restart?", "- ->NIE  + ->TAK");
       vTaskDelay(1000 / portTICK_PERIOD_MS);

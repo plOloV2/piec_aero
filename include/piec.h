@@ -56,13 +56,13 @@ void temp_change(data *przy, stage *now){     //changes aimed temperature, calle
 
 bool baking_manual(data *przy){              //manual controll over owen, return true if owen is manually controlled
 
-  if(przy->enter && przy->plus){      //enter + plus -> owen heating ON
+  if(przy->enter && przy->plus && !przy->minus){      //enter + plus -> owen heating ON
     digitalWrite(owen, HIGH);
     digitalWrite(led_indicator, HIGH);
     return true;
   }
 
-  if(przy->enter && przy->minus){      //enter + minus -> owen heating OFF
+  if(przy->enter && przy->minus && !przy->plus){      //enter + minus -> owen heating OFF
     digitalWrite(owen, LOW);
     digitalWrite(led_indicator, LOW);
     return true;

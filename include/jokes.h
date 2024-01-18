@@ -18,7 +18,7 @@ void funny(jokes_on_you *joke){
         break;
 
         case(1):
-        joke->joke1 = "Gizmo";
+        joke->joke1 = "Nazari Honcharen";
         break;
 
         case(2):
