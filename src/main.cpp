@@ -70,102 +70,103 @@ void lcd_update(void *parametr){
 }
 
 void data_input(void *parametr){
-  while(1){
-    przy->stage_number = 1;
+  przy->stage_number = 1;
 
-    while(!przy->enter){
-      print_to_lcd("Ile etapow?", String(przy->stage_number));
+  while(!przy->enter){
+    print_to_lcd("Ile etapow?", String(przy->stage_number));
 
-      przy->stage_number = value_change(przy->stage_number, 10, 0, przy);
+    przy->stage_number = value_change(przy->stage_number, 10, 0, przy);
 
-      vTaskDelay(250 / portTICK_PERIOD_MS);
+    vTaskDelay(250 / portTICK_PERIOD_MS);
+  }
+
+  
+  for(int i=0; i<przy->stage_number; i++){
+    if(i==0){
+      head = new stage;
+      now = head;
+    }
+    else{
+      now->next = new stage;
+      now = now->next;
     }
 
-    
-    for(int i=0; i<przy->stage_number; i++){
-      if(i==0){
-        head = new stage;
-        now = head;
-      }
-      else{
-        now->next = new stage;
-        now = now->next;
-      }
 
+    now->stage_temp = 30;
+    now->stage_time = 5;
+    now->temp_grow = 1;
+    now->next = NULL;
 
-      now->stage_temp = 30;
-      now->stage_time = 5;
-      now->temp_grow = 1;
-      now->next = NULL;
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-
-      unsigned char state = 0;
-      
-      while(state < 3){
-
-        switch(state){
-          case(0):
-            print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
-
-            now->stage_time = value_change(now->stage_time, 255, 1, przy);
-            
-            if(przy->enter){
-              state = 1;
-              vTaskDelay(500 / portTICK_PERIOD_MS);
-            }
-              
-            vTaskDelay(150 / portTICK_PERIOD_MS);
-
-            break;
-
-          case(1):
-            print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
-
-            now->stage_temp = value_change(now->stage_temp, 125, 30, przy);
-            
-            if(przy->enter){
-              state = 2;
-              vTaskDelay(500 / portTICK_PERIOD_MS);
-            }
-
-            vTaskDelay(250 / portTICK_PERIOD_MS);
-
-            break;
-
-            
-          case(2):
-            print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
-
-            now->temp_grow = value_change(now->temp_grow, 30, 1, przy);
-            
-            if(przy->enter){
-              state = 3;
-              vTaskDelay(500 / portTICK_PERIOD_MS);
-            }
-
-            vTaskDelay(250 / portTICK_PERIOD_MS);
-
-            break;
-        }
-      }
-    }
-    
-    przy->cooling_time = 1;
-
-    przy->stage_number = 0;
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    while(!przy->enter){
-      print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
+    unsigned char state = 0;
+    
+    while(state < 3){
 
-      przy->cooling_time = value_change(przy->cooling, 255, 0, przy);
+      switch(state){
+        case(0):
+          print_to_lcd("Czas etapu " + String(i+1) + ":", String(now->stage_time) + "min");
 
-      vTaskDelay(100 / portTICK_PERIOD_MS);
+          now->stage_time = value_change(now->stage_time, 255, 1, przy);
+          
+          if(przy->enter){
+            state = 1;
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+          }
+            
+          vTaskDelay(150 / portTICK_PERIOD_MS);
+
+          break;
+
+        case(1):
+          print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
+
+          now->stage_temp = value_change(now->stage_temp, 125, 30, przy);
+          
+          if(przy->enter){
+            state = 2;
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+          }
+
+          vTaskDelay(250 / portTICK_PERIOD_MS);
+
+          break;
+
+          
+        case(2):
+          print_to_lcd("Narost etapu " + String(i+1) + ":", String(now->temp_grow/10) + "," + String(now->temp_grow%10) + "*C/min");
+
+          now->temp_grow = value_change(now->temp_grow, 30, 1, przy);
+          
+          if(przy->enter){
+            state = 3;
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+          }
+
+          vTaskDelay(250 / portTICK_PERIOD_MS);
+
+          break;
+      }
     }
-
-    przy->data_ready = true;
-    vTaskSuspend(data_enter);
   }
+  
+  przy->cooling_time = 1;
+
+  przy->stage_number = 0;
+
+  vTaskDelay(500 / portTICK_PERIOD_MS);
+
+  while(!przy->enter){
+    print_to_lcd("Czas chlodzenia", String(przy->cooling_time)+"min, 0->brak");
+
+    przy->cooling_time = value_change(przy->cooling, 255, 0, przy);
+
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+
+  przy->data_ready = true;
+  vTaskSuspend(data_enter);
+
 }
 
 void joker(void *parametr){
@@ -180,7 +181,7 @@ void joker(void *parametr){
   }
 }
 
-void setup() { //owen setup
+int main() { //owen setup
 
   wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
 
@@ -216,9 +217,6 @@ void setup() { //owen setup
 
 
   xTaskCreate(temp_measure, "Temp measuring", 100, NULL, 3, &temp_measurer);
-}
-
-void loop() {
 
   print_to_lcd("Piec zablokowany", "Odb:ENTER + PLUS" );        //owen blokade, enter + plus -> owen unblock
   while(1){
