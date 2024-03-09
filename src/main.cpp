@@ -248,7 +248,7 @@ void data_input(void *parametr){
             print_to_lcd("Temp etapu " + String(i+1) + ":", String(now->stage_temp) + "*C");
 
             if(przy->plus){
-              if(now->stage_temp == 125)
+              if(now->stage_temp == 150)
                 now->stage_temp = 30;
               else 
                 now->stage_temp++;
@@ -256,7 +256,7 @@ void data_input(void *parametr){
 
             if(przy->minus){
               if(now->stage_temp == 30)
-                now->stage_temp = 125;
+                now->stage_temp = 150;
               else 
                 now->stage_temp--;
             }

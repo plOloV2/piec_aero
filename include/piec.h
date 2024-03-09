@@ -146,36 +146,47 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
   }
   
 }
-     
+
 
 double owen_temp(){
 
-  //double voltageDividerR1 = 4700;          // Resistor value in R1 for voltage devider method 
-  //double BValue = 3470;                    // The B Value of the thermistor for the temperature measuring range
-  //double R1 = 5000;                        // Thermistor resistor rating at based temperature (25 degree celcius)
-  //double T1 = 298.15;                      /* Base temperature T1 in Kelvin (default should be at 25 degree)*/                               /* Measurement temperature T2 in Kelvin */
-  //double e = 2.718281828;                  /* the value of e use for calculation in Temperature*/
-  double temp;                               /* to read the value 4 times*/
+  //1000                         Resistor value in R1 for voltage devider method                      4700 -> 1000
+  //3470                         The B Value of the thermistor for the temperature measuring range    
+  //109.73                       Thermistor resistor rating at based temperature (25 degree celcius)  10000 -> 109.73
+  //298.15                       Base temperature T1 in Kelvin (default should be at 25 degree)       
+
+  double temp;                    /* to read the value 4 times*/
 
   temp = analogRead(termistor);
+  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   temp += analogRead(termistor);
+  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   temp += analogRead(termistor);
+  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
-  temp += analogRead(termistor);                                                 
+  temp += analogRead(termistor);
+  wdt_reset(); 
       
   temp /= 4.0;                                                 /* find the average analog value from those data*/
   
-  temp = log((4700 / (1023 / temp - 1) ) / 10000);
+  temp = 1023 / temp - 1;
+  temp = 1000 / temp;
+
+// ver1
+  temp = log(temp / 109.73);
   temp /= 3470;
   temp += 1.0 / 298.15;
   temp = 1.0 / temp;
   temp -= 273.15;
 
+// ver2 
+  // temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 273.15;
+  
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   return temp;                  
