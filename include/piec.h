@@ -158,19 +158,15 @@ double owen_temp(){
   double temp;                    /* to read the value 4 times*/
 
   temp = analogRead(termistor);
-  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   temp += analogRead(termistor);
-  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   temp += analogRead(termistor);
-  wdt_reset(); 
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   temp += analogRead(termistor);
-  wdt_reset(); 
       
   temp /= 4.0;                                                 /* find the average analog value from those data*/
   
