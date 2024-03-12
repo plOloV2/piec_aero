@@ -5,12 +5,12 @@
 #include <avr/wdt.h>
 
 
-#define owen A4                          //output to owen
-#define led_indicator A5                 //output indicator, HIGH if owen is told to heat 
+#define owen A4                        //output to owen
+#define led_indicator A5               //output indicator, HIGH if owen is told to heat 
 #define button_plus 3                  //plus button
 #define button_minus 2                 //minus button
 #define button_enter 1                 //enter button
-#define termistor A0                    //termistor pin
+#define termistor A0                   //termistor pin
 
 LiquidCrystal lcd(4, 5, 6, 7, 8, 9, 10, 11, 12, 13);    //LCD pinout initialization
 void(* resetFunc) (void) = 0;
@@ -30,9 +30,9 @@ struct data{
   bool enter;                      //enter button status
   bool cooling;                    //cooling switch
   bool data_ready;                 //set to true if data input has been finishead
-  double temp_now;                  //last measured temperature
-  double temp_aim;                  //temperature wanted in owne
-  double cooling_temp_change;       //temperature decreas during cooling
+  double temp_now;                 //last measured temperature
+  double temp_aim;                 //temperature wanted in owne
+  double cooling_temp_change;      //temperature decreas during cooling
   unsigned int cooling_time;       //colling duration in minutes
   unsigned int to_end;             //time to end of stage in minutes
   unsigned char stage_number;      //current stage number in baking, also used to determin how many stages there will be when enttering data
@@ -148,12 +148,7 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
 }
 
 
-double owen_temp(){
-
-  //1000                         Resistor value in R1 for voltage devider method                      4700 -> 1000
-  //3470                         The B Value of the thermistor for the temperature measuring range    
-  //109.73                       Thermistor resistor rating at based temperature (25 degree celcius)  10000 -> 109.73
-  //298.15                       Base temperature T1 in Kelvin (default should be at 25 degree)       
+double owen_temp(){    
 
   double temp;                    /* to read the value 4 times*/
 
@@ -168,20 +163,17 @@ double owen_temp(){
 
   temp += analogRead(termistor);
       
-  temp /= 4.0;                                                 /* find the average analog value from those data*/
-  
-  temp = 1023 / temp - 1;
-  temp = 1000 / temp;
+  temp /= 4.0;                    /* find the average analog value from those data*/
 
-// ver1
-  temp = log(temp / 109.73);
-  temp /= 3470;
-  temp += 1.0 / 298.15;
-  temp = 1.0 / temp;
-  temp -= 273.15;
 
-// ver2 
-  // temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 273.15;
+  temp *= 5;
+  temp /=1024.0;
+  temp = (5 / temp) - 1;
+  temp *= 980;                    /*resistance value*/
+
+  Serial.println(temp);
+
+  temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 277.15;
   
   vTaskDelay(250 / portTICK_PERIOD_MS);
 

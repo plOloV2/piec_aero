@@ -343,6 +343,8 @@ void setup() { //owen setup
   
   digitalWrite(owen, LOW);
   digitalWrite(led_indicator, LOW);
+  
+  Serial.begin(9600);
 
 
   xTaskCreate(main_task, "Boss", 128, NULL, 10, &main_tasker);                            //task creation
@@ -352,6 +354,7 @@ void setup() { //owen setup
   xTaskCreate(owen_controll, "Owen controlling", 100, NULL, 1, &owen_controller);
   xTaskCreate(data_input, "Stage info input", 100, NULL, 1, &data_enter);
   xTaskCreate(lcd_update, "LCD updating", 100, NULL, 0, &lcd_updater);
+
 
 }
 
