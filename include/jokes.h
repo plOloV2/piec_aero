@@ -1,70 +1,53 @@
-#include <Arduino.h>
+#include <WString.h>
 
-struct jokes_on_you{
-    String joke1;
-    String joke2;
-};
+/*
+W pliku piec.h zmienić wartości w linijkach 64 oraz 66 tak by odpowiadały ilości możliwości odjąć jeden
+*/
 
-
-void funny(jokes_on_you *joke){
-
-    randomSeed(analogRead(A5));
-
-    unsigned char los = random(4);
+String joke_row1(unsigned char los){
 
     switch(los){
         case(0):
-        joke->joke1 = "Kuba Ruchala";
-        break;
+        return "Kuba Ruchala";
 
         case(1):
-        joke->joke1 = "Nazari Honcharen";
-        break;
+        return "Nazari";
 
         case(2):
-        joke->joke1 = "Zuber";
-        break;
+        return "Zuber";
         
-        case(3):
-        joke->joke1 = "Michal Dowgiallo";
-        break;
+        default:
+        return "Michal Dowgiallo";
     }
 
-    
-    los = random(8);
+}
+
+String joke_row2(unsigned char los){
     
     switch(los){
         case(0):
-        joke->joke2 = "laminuje";
-        break;
+        return "laminuje";
 
         case(1):
-        joke->joke2 = "zamyka worek";
-        break;
+        return "zamyka worek";
 
         case(2):
-        joke->joke2 = "zamyka morde";
-        break;
+        return "zamyka morde";
         
         case(3):
-        joke->joke2 = "klei takitejpa";
-        break;
+        return "klei takitejpa";
 
         case(4):
-        joke->joke2 = "udaje ze pracuje";
-        break;
+        return "udaje ze pracuje";
 
         case(5):
-        joke->joke2 = "daje fula";
-        break;
+        return "daje fula";
 
         case(6):
-        joke->joke2 = "leci w chuja";
-        break;
+        return "leci w chuja";
 
-        case(7):
-        joke->joke2 = "stawia browary";
-        break;
+        default:
+        return "stawia browary";
     }
 
 }
