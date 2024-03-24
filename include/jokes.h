@@ -49,5 +49,4 @@ String joke_row2(unsigned char los){
         default:
         return "stawia browary";
     }
-
 }
