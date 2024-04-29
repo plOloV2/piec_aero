@@ -2,11 +2,9 @@
 #include <jokes.h>
 #include <LCD.h>
 
-#define time_ticks 49910                //65535 - (16M / (256 * 4)) -> 1/4 sec
-#define time_ticks_lcd 64285            //65535 - (16M / (256 * 50)) -> 1/50 sec
+#define time_ticks 3035                 //65535 - (16M / (64 * 4)) -> 1/4 sec (250ms)
 
 struct time{
-    bool lcd_setup;
     unsigned char frag_sec;
     unsigned char sec;
     unsigned char min;
@@ -47,9 +45,9 @@ struct stage{
 
 void setup(time *clock){                //needs description
 
-    TCNT1 = time_ticks_lcd;
+    TCNT1 = time_ticks;
 
-    TCCR1B = (1 << CS12);
+    TCCR1B = (1 << CS11) | (1 << CS10);     //sets prescaler to 64
 
     TCCR1A = 0x00;
 
@@ -64,32 +62,27 @@ void setup(time *clock){                //needs description
 
 void time_keeper(time *clock){              //needs description
 
-    if(clock->lcd_setup)
-        TCNT1 = time_ticks_lcd;
+    clock->frag_sec++;
 
-    else{
+        if(clock->frag_sec == 4){
 
-        clock->frag_sec++;
+            clock->sec++;
 
-            if(clock->frag_sec == 4){
+            if(clock->sec == 60){
 
-                clock->sec++;
+                clock->min++;
 
-                if(clock->sec == 60){
+                clock->sec = 0;
 
-                    clock->min++;
-
-                    clock->sec = 0;
-
-                }
-
-                clock->frag_sec = 0;
             }
 
-        TCNT1 = time_ticks;
-    }
-        
+            clock->frag_sec = 0;
+        }
+
+    TCNT1 = time_ticks;
 }
+        
+
 
 
 void buttons_settup(){

@@ -1,78 +1,115 @@
 #include <WString.h>                            //lots of work to be done here...
+#include <delay.h>
 
 /*
+    HD44780U data sheet: https://www.sparkfun.com/datasheets/LCD/HD44780.pdf
+
     LCD pins 4 - 13
+    RS -> 4
+    EN -> 5
+    DB7 -> 6
+    DB6 -> 7
+    DB5 -> 8
+    DB4 -> 9
+    DB3 -> 10
+    DB2 -> 11
+    DB1 -> 12
+    DB0 -> 13
+
     8 data pins mode
     16x2 display mode
 */
 
-void LCD_setup_1(){   
+void pulse_enable(){        //wait command for LCD to proces instruction
+
+  PORTD |= 0b00100000;      //sets EN pin to HIGH
+
+  delayMicroseconds(1);     //enable pulse must be >450ns
+
+  PORTD &= !0b00100000;     //sets EN to LOW -> LCD begins executing instructions
+
+  delayMicroseconds(100);   // commands need >37 us to settle
+}
+
+void LCD_setup_1(){       //resets LCD into listening to setup commands, must be  3 times
+
+  DDRD |= 0b11110000;     //sets pins 4-13 as output
+  DDRB |= 0b00111111;
+
+  PORTD &= !0b11110000;   //sets pins 4-7 as LOW 
+  PORTB &= !0b00111111;   //sets pins 8-13 as LOW
+
+  PORTD &= !0b10110000;   //sets pins 4,6,7 as LOW
+  PORTB |= 0b00000011;    //sets pins 8 and 9 to HIGH
+  
+  pulse_enable();
+}
+
+void LCD_setup_2(){       //sets 8pin mode and display & font size
+  
+  PORTD &= !0b10110000;   //sets pins 4,6,7 as LOW
+  PORTB |= 0b00000111;    //sets pins 8, 9, 10 to HIGH
+  PORTB &= !0b00001000;   //sets pins 11 to LOW
+
+  pulse_enable();
+}
+
+void LCD_setup_3(){       //turn display and cursor on
+
+  PORTD &= !0b10110000;   //sets pins 4,6,7 as LOW
+  PORTB |= 0b00011100;    //sets pins 10,11,12 to HIGH
+  PORTB &= !0b00100011;   //sets pins 8, 9, 13 to LOW
+
+  pulse_enable();
+}
+
+void LCD_setup_4(){       //sets display to write from left to right
+
+  PORTD |= 0b00100000;    //sets EN pin to HIGH
+  PORTD &= !0b10110000;   //sets pins 4,6,7 as LOW
+  PORTB |= 0b00011000;    //sets pins 11,12 to HIGH
+  PORTB &= !0b00100111;   //sets pins 8, 9, 10, 13 to LOW
 
 }
 
-void LCD_setup_2(){   
+void LCD_write(char letter, bool * ){
 
 }
 
-void LCD_setup_3(){   
+void set_row(unsigned char row){
 
 }
 
-void LCD_write(String row1, String row2){
+void lcd_clear(){
 
 }
 
-/*
-void LCDreset()             // Reset LCD into 4-bit mode. Only needs to be called once at start up. 
-{ 
-  // Data sheet calls this initialization by instruction. Send 0x3 three times, then 0x2 to reset into 4-bit mode.
-  PORTD &= B00000011;       // 01. Clear D7-D4, En, RS (digital pins 7-2, respectively) to 0 as a neutral starting point, leave pins 1,0 unchanged
-  PORTD |= B00111000;       // 02. Write upper nibble 0x3, En=1
-  PORTD &= B11110111;       // 03. En=0. Command is sent on trailing edge of enable
-  _delay_ms(5);             // 04. Wait >4.1ms for command to process
-  PORTD |= B00111000;       // 05. Write upper nibble 0x3, En=1
-  PORTD &= B11110111;       // 06. En=0. Command is sent on trailing edge of enable
-  _delay_us(150);           // 07. Wait >100us for command to process
-  PORTD |= B00111000;       // 08. Write upper nibble 0x3, En = 1
-  PORTD &= B11110111;       // 09. En=0. Command is sent on trailing edge of enable
-  _delay_us(150);           // 10. Wait >100us for command to process
-  PORTD &= B00000011;       // 11. Clear PORTD to overwrite next instruction in buffer
-  PORTD |= B00101000;       // 12. Write upper nibble 0x2, En = 1
-  PORTD &= B11110111;       // 13. En=0. Command is sent on trailing edge of enable
-  _delay_us(150);           // 14. Wait >100us for command to process
-  // At this point LCD is reset and listening for 4-bit commands.
-}
 
-void LCD4BitWriteCMD(byte CMD)            // Write a command byte to the LCD one nibble at a time using 4 bit mode.
-{
-  byte upperNibble = CMD & 0xF0;          // 01. Mask upper nibble of CMD, clear lower nibble so result takes the form: 0xUUUU0000
-  byte lowerNibble = (CMD & 0x0F) << 4;   // 02. Mask lower nibble of CMD, clear upper nibble then shift left 4 so result takes the form 0xLLLL0000
-  PORTD &= B00000011;                     // 03. Clear LCD buffer, enable, and register select
-  PORTD |= upperNibble;                   // 04. Write upperNibble to LCD buffer
-  PORTD |= B00001000;                     // 05. En=1, RS = 0
-  PORTD &= B11110111;                     // 06. En=0. Command is sent on trailing edge of enable
-  _delay_us(1600);                        // 07. Wait >40us for command to process
-  PORTD &= B00000011;                     // 08. Clear LCD buffer, enable, and register select
-  PORTD |= lowerNibble;                   // 09. Write lowerNibble to LCD buffer
-  PORTD |= B00001000;                     // 10. En=1, RS = 0
-  PORTD &= B11110111;                     // 11. En=0. Command is sent on trailing edge of enable
-  _delay_us(1600);                        // 12. Wait >40us for command to process
+void lcd_setup(){             //initializes LCD page 45, figure 23
+
+  delayMicroseconds(50000);   //waits >40ms for LCD to power up
+
+  LCD_setup_1();              //first time
+  delayMicroseconds(4500);    //waits >4.1ms
+
+  LCD_setup_1();              //seccond time
+  delayMicroseconds(150);     //waits >100us
+
+  LCD_setup_1();              //third time is a charm
+
+  LCD_setup_2();              //display mode setup first part
+
+  LCD_setup_3();              //display mode setup second part
+
+  LCD_setup_4();              //display mode setup third part
+
 }
 
 
-void LCD4BitWriteDAT(byte DAT)            // Write a data byte to the LCD one nibble at a time using 4 bit mode.
-{
-  byte upperNibble = DAT & 0xF0;          // 01. Mask upper nibble of DAT, clear lower nibble so result takes the form: 0xUUUU0000
-  byte lowerNibble = (DAT & 0x0F) << 4;   // 02. Mask lower nibble of DAT, clear upper nibble then shift left 4 so result takes the form 0xLLLL0000
-  PORTD &= B00000011;                     // 03. Clear LCD buffer, enable, and register select 
-  PORTD |= upperNibble;                   // 04. Write upperNibble to LCD buffer
-  PORTD |= B00001100;                     // 05. En=1, RS = 1
-  PORTD &= B11110111;                     // 06. En=0. Command is sent on trailing edge of enable
-  _delay_us(1600);                        // 07. Wait >40us for command to process
-  PORTD &= B00000011;                     // 08. Clear LCD buffer, enable, and register select
-  PORTD |= lowerNibble;                   // 09. Write lowerNibble to LCD buffer
-  PORTD |= B00001100;                     // 10. En=1, RS = 1
-  PORTD &= B11110111;                     // 11. En=0. Command is sent on trailing edge of enable
-  _delay_us(1600);                        // 12. Wait >40us for command to process
+void lcd_print(String row1, String row2){
+
+  for(unsigned char i = 0; i < 16; i++){
+
+  }
+  
 }
-*/

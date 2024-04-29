@@ -21,30 +21,10 @@ ISR(TIMER1_OVF_vect){
 }
 
 
-void lcd_setup(){
-
-  LCD_setup_1();
-  run = false;
-  while (run);
-
-  LCD_setup_2();
-  run = false;
-  while (run);
-
-  LCD_setup_3();
-  run = false;
-  while (run);
-  
-}
-
-
-
 int main(){
-
 
   buttons_settup();                   //setup section
   owen_output_setup();
-  clock->lcd_setup = true;
   setup(clock);
   
   lcd_setup();
