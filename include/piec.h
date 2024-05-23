@@ -90,7 +90,7 @@ bool baking_manual(data *przy){              //manual controll over owen, return
 }
 
 
-void baking_auto(data *przy){
+void baking_auto(data *przy){           //switches owen on and off depending on last measure temp
   if(przy->temp_now < przy->temp_aim){
     digitalWrite(owen, HIGH);
     digitalWrite(led_indicator, HIGH);
@@ -147,7 +147,7 @@ void lcd_menager(data *przy, stage *now){       //prints to lcd baking info, upd
 }
 
 
-double owen_temp(){    
+double owen_temp(){                 //mesures temp every 1/4s and returns average every 1s
 
   double temp;                    /* to read the value 4 times*/
 
@@ -170,7 +170,7 @@ double owen_temp(){
   temp = (5 / temp) - 1;
   temp *= 980;                    /*resistance value*/
 
-  temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 277.15;
+  temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 277.15;      
   
   vTaskDelay(250 / portTICK_PERIOD_MS);
 

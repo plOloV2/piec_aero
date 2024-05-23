@@ -108,8 +108,7 @@ void main_task(void *parametr){
   digitalWrite(owen, LOW);
   digitalWrite(led_indicator, LOW);
 
-  vTaskSuspend(temp_measurer);          //after all baking and cooling suspends all not needed tasks
-  vTaskSuspend(owen_controller);
+  vTaskSuspend(owen_controller);          //after all baking and cooling suspends all not needed tasks
   vTaskSuspend(temp_changer);
   vTaskSuspend(lcd_updater);
   
@@ -117,9 +116,14 @@ void main_task(void *parametr){
   mem_clean(head);
 
 
-  print_to_lcd("Koniec pieczenia", "Smacznego ciacha");   //prints end text and waits to press enter
-  while(!przy->enter)
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+  print_to_lcd("Koniec pieczenia", "T: " + String(przy->temp_now) + "C");   //prints end text and waits to press enter
+  lcd.setCursor(0,1);
+
+  while(!przy->enter){
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    lcd.print("T: " + String(przy->temp_now) + "C");
+  }
+    
 
   vTaskDelay(200);
   resetFunc();
@@ -206,9 +210,9 @@ void data_input(void *parametr){
       }
 
 
-      now->stage_temp = 30;
-      now->stage_time = 5;
-      now->temp_grow = 1;
+      now->stage_temp = 80;
+      now->stage_time = 30;
+      now->temp_grow = 10;
       now->next = NULL;
       vTaskDelay(500 / portTICK_PERIOD_MS);
 
@@ -329,9 +333,9 @@ void data_input(void *parametr){
   }
 }
 
-void setup() { //owen setup
+void setup() {                                                                          //owen setup
 
-  lcd.begin(16, 2);                     //pins setup
+  lcd.begin(16, 2);                                                                     //pins setup
   pinMode(button_plus, INPUT_PULLUP);
   pinMode(button_minus, INPUT_PULLUP);
   pinMode(button_enter, INPUT_PULLUP);
