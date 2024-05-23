@@ -18,7 +18,6 @@ TaskHandle_t lcd_updater;
 void button_check(void *parametr){
   while(1){
     buttons(przy);
-    wdt_reset();                        //watchdog timer reset
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
@@ -331,7 +330,6 @@ void data_input(void *parametr){
 }
 
 void setup() { //owen setup
-  wdt_enable(WDTO_1S); //watchdog initialization with 1sec timer
 
   lcd.begin(16, 2);                     //pins setup
   pinMode(button_plus, INPUT_PULLUP);
@@ -343,8 +341,6 @@ void setup() { //owen setup
   
   digitalWrite(owen, LOW);
   digitalWrite(led_indicator, LOW);
-  
-  Serial.begin(9600);
 
 
   xTaskCreate(main_task, "Boss", 128, NULL, 10, &main_tasker);                            //task creation

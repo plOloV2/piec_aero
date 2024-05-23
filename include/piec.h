@@ -2,7 +2,6 @@
 #include <LiquidCrystal.h>
 #include <Wire.h>
 #include <Arduino_FreeRTOS.h>
-#include <avr/wdt.h>
 
 
 #define owen A4                        //output to owen
@@ -170,8 +169,6 @@ double owen_temp(){
   temp /=1024.0;
   temp = (5 / temp) - 1;
   temp *= 980;                    /*resistance value*/
-
-  Serial.println(temp);
 
   temp = (1/(0.03537299663 - 0.008631998552*log(temp) + 0.00008232071957*pow(log(temp), 3))) - 277.15;
   
