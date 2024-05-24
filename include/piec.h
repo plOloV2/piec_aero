@@ -10,9 +10,9 @@
 #define button_minus 2                 //minus button
 #define button_enter 1                 //enter button
 #define termistor A0                   //termistor pin
+#define resetPin A2                    //connected to arduino reset pin
 
 LiquidCrystal lcd(4, 5, 6, 7, 8, 9, 10, 11, 12, 13);    //LCD pinout initialization
-void(* resetFunc) (void) = 0;
 
 
 struct stage{ 

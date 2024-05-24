@@ -121,12 +121,12 @@ void main_task(void *parametr){
 
   while(!przy->enter){
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    lcd.setCursor(0,1);
     lcd.print("T: " + String(przy->temp_now) + "C");
   }
-    
 
   vTaskDelay(200);
-  resetFunc();
+  pinMode(resetPin, OUTPUT);
 
 }
 
@@ -145,7 +145,7 @@ void owen_controll(void *parametr){
 
       while(1){
         if(przy->plus)
-          resetFunc();
+          pinMode(resetPin, OUTPUT);
 
         if(przy->minus)
           break;
@@ -342,7 +342,9 @@ void setup() {                                                                  
   pinMode(owen, OUTPUT);
   pinMode(led_indicator, OUTPUT);
 
-  
+  pinMode(resetPin, INPUT);
+  digitalWrite(resetPin, LOW);
+
   digitalWrite(owen, LOW);
   digitalWrite(led_indicator, LOW);
 
